@@ -9,14 +9,7 @@ import { postApi } from '../app/api/posts';
 import { toast } from 'react-toastify';
 import useUserStore from '@/store/useUserStore';
 import "react-toastify/dist/ReactToastify.css";
-
-interface Post {
-  id: string;
-  category: string;
-  url: string;
-  likes: number;
-  title: string;
-}
+import { Post } from '../app/types/post';
 
 export function EditPostDialog({ post, onPostUpdate }: { post: Post; onPostUpdate: (title: string, url: string) => void }) {
   const [editedPost, setEditedPost] = useState(post);
@@ -179,7 +172,15 @@ export function UploadDialog({ category, onPostUpdate }: { category: string; onP
     try {
       setIsLoading(true);
       console.log(isLoading)
-      const createdPost = await postApi.createPost(newPost);
+      const createdPost = await postApi.createPost({
+        ...newPost,
+        _id: '',
+        id: '',
+        likes: 0,
+        domain: '',
+        votes: [],
+        category: category as "photography" | "videography" | "digital art",
+      });
       console.log(createdPost)
       if(createdPost){
         onPostUpdate(newPost.title,newPost.url);
