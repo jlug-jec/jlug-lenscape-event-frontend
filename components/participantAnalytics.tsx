@@ -1,48 +1,25 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState} from "react";
 import Image from "next/legacy/image";
 import { ThumbsUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EditPostDialog, UploadDialog } from "./postDialogs";
-import { toast } from "react-toastify";
-import useUserStore from "@/store/useUserStore";
-
-interface Post {
-  id: string;
-  title:string;
-  category: 'photography' | 'videography' | 'digiatal art';
-  url: string;
-  likes: number;
-
-}
-interface TeamMember {
-    _id: string;
-    name: string;
-    picture: string;
-  }
-  
-  interface UserData {
-    team?: {
-      _id: string;
-    };
-    // Add other user properties as needed
-  }
-  
+import type { Post } from "../app/types/post";
 
 const categories = ['photography', 'videography', 'digital art'] as const;
 
 function PostCard({ post, category }: { post?: Post; category: string }) {
-  const [currentPost, setCurrentPost] = useState(post); 
+  const [currentPost, setCurrentPost] = useState<Post | undefined>(post); 
 
   
   const handlePostUpdate = (title:string,url:string) => {
-    setCurrentPost((currentPost)=>{
+    setCurrentPost((currentPost: Post | undefined) => {
       return {
-        ...currentPost,
-        title:title,
-        url:url
-      }
+        ...currentPost!,
+        title: title,
+        url: url
+      } as Post;
     });
   };
 
@@ -86,74 +63,7 @@ function PostCard({ post, category }: { post?: Post; category: string }) {
 }
 
 
-export default function ParticipantAnalytics() {
-  const [userPosts, setUserPosts] = useState();
-  const [totalLikes, setTotalLikes] = useState<number>(0);
-  const [loading, setLoading] = useState<boolean>(true);
-  const { user,loadUser } = useUserStore();
-  const [teamId, setTeamId] = useState<UserData | null>(null);
-
- 
-  useEffect(() => {
-    loadUser();
-  }, [loadUser]);
-
-  useEffect(() => {
-    const fetchUserDetails = async () => {
-      if (!user?.userId) return;
-
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/participant/users/${user.userId}`);
-        if (response.ok) {
-          const result = await response.json();
-          
-          setTeamId(result.team._id);
-        } else {
-          toast.error("Failed to fetch post details. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error fetching user details:", error);
-        toast.error("An unexpected error occurred. Please try again.");
-      }
-    };
-
-    fetchUserDetails();
-  }, [user?.userId]);
-
-
-  useEffect(() => {
-    const fetchUserPosts = async () => {
-    
-      if (!teamId) return;
-
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/team/${teamId}`);
-        if (response.ok) {
-          const fetchedPosts = await response.json();
-          
-          setUserPosts(fetchedPosts);
-
-          //TODO : TOTAL LIKES FUNCTION
-
-          // const totalLikes = fetchedPosts.reduce((sum, post) => sum + post.likes, 0);
-          // setTotalLikes(totalLikes);
-        } else {
-          toast.error("Failed to fetch posts");
-        }
-      } catch (error) {
-        console.error("Error fetching posts:", error);
-        toast.error("An unexpected error occurred while fetching posts");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserPosts();
-  }, [teamId]);
-  if (loading) {
-    return <p>Loading...</p>;
-  }
-
+export default function ParticipantAnalytics({ userPosts, totalLikes }:{ userPosts:  Post[] | null ; totalLikes: number }) {
   return (
     <Card className="bg-gray-800 border-gray-700">
       <CardHeader>
@@ -169,8 +79,8 @@ export default function ParticipantAnalytics() {
         </div>
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
           {categories.map((category) => {
-            const post = userPosts?.posts.find(post => post.domain === category);
-            return <PostCard key={post?._id} post={post} category={category}  />;
+            const post = userPosts?.find(post => post.domain === category);
+            return <PostCard key={post?._id} post={post} category={category} />;
           })}
         </div>
       </CardContent>

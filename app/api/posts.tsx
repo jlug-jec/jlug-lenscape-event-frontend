@@ -1,8 +1,7 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-
+import { Post } from '../types/post';
 export const postApi = {
-    createPost: async (postData) => {
-        console.log(postData)
+    createPost: async (postData:Post) => {
       const response = await fetch(`${API_URL}/api/posts/createPost`, {
         method: 'POST',
         headers: {
@@ -18,7 +17,7 @@ export const postApi = {
       return await response.json();
     },
   
-    editPost: async (postId, postData) => {
+    editPost: async (postId:string, postData:Post) => {
       const response = await fetch(`${API_URL}/api/posts/${postId}`, {
         method: 'PUT',
         headers: {

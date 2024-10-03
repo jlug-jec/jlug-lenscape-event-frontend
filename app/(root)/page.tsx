@@ -48,8 +48,8 @@ import { useState, useEffect } from 'react'
 import { motion, useAnimation } from 'framer-motion'
 import { useInView } from 'react-intersection-observer'
 import Image from "next/legacy/image"
-import router from 'next/router'
 
+import { useRouter } from 'next/navigation';
 const useScrollPosition = (): number => {
   const [scrollPosition, setScrollPosition] = useState<number>(0)
 
@@ -69,13 +69,23 @@ const useScrollPosition = (): number => {
 
 export default function Homepage() {
     // Function to handle Google Authentication
-   
+    const router=useRouter()
   
   const handleGoogleAuth = () => {
-    const isOnboarded=localStorage.getItem('onboardedUser');
-    const isParticipantLocalStorage=localStorage.getItem('isParticipant');
+    const isOnboarded = localStorage.getItem('onboardedUser') === 'true'; // Convert to boolean
+  const isParticipantLocalStorage = localStorage.getItem('isParticipant') === 'true'; // Convert to boolean
+   
     if (isOnboarded && isParticipantLocalStorage){
+     
       router.push('/profile');
+      return
+    
+    }
+    else if(
+      isOnboarded && !isParticipantLocalStorage
+    ){
+    
+      router.push('/countdown');
       return
     }
     else{

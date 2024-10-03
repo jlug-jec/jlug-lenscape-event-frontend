@@ -1,9 +1,10 @@
 import {create} from 'zustand';
 
 interface User {
-  userId: string; // Assuming user has an ID
+  userId: string | null; // Assuming user has an ID
   name: string;
   picture: string;
+  email:string
   instagramId?: string; // Optional field
   branch?: string; // Optional field
   isParticipant?: boolean; // Optional field

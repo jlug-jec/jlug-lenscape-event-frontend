@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ClipLoader } from 'react-spinners'
+import { BarLoader } from 'react-spinners'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -16,11 +16,20 @@ import "../../app/globals.css";
 import { useSearchParams } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 
+interface TeamMember {
+  name: string;
+  email: string;
+  branch: string;
+  collegeName: string;
+  userId: string | null; // Can change this to string | null if userId can be null
+}
+
+
 export default function OnboardingPage() {
   const router = useRouter();
-  const { setUser } = useUserStore();
+  const { user,setUser } = useUserStore();
   const searchParams = useSearchParams();
-  const userId = searchParams.get('userId');
+  let userId = searchParams.get('userId');
   const invitedTeamId = searchParams.get('teamId');
   
   const [isInvited, setIsInvited] = useState(false);
@@ -30,7 +39,17 @@ export default function OnboardingPage() {
   const [isParticipant, setIsParticipant] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
   const [teamName, setTeamName] = useState('');
-  const [teamMembers, setTeamMembers] = useState([{ name: '', email: '', branch: '', collegeName: '',userId: '' }]);
+const [teamMembers, setTeamMembers] = useState<TeamMember[]>([ { name: '', email: '', branch: '', collegeName: '', userId: '' }] as any[]);
+
+interface TeamMember {
+  name: string;
+  email: string;
+  branch: string;
+  collegeName: string;
+  userId: string | null;
+  [key: string]: any;
+}
+
   const [photographyLink, setPhotographyLink] = useState('');
   const [photographyTitle, setPhotographyTitle] = useState('');
   const [videographyLink, setVideographyLink] = useState('');
@@ -39,25 +58,21 @@ export default function OnboardingPage() {
   const [digitalArtTitle, setDigitalArtTitle] = useState('');
   const [teamLeaderIndex, setTeamLeaderIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
   const [teamId, setTeamId] = useState(uuidv4());
-  const isOnboarded=localStorage.getItem('onboardedUser');
-  const isParticipantLocalStorage=localStorage.getItem('isParticipant');
-  if(isOnboarded && isParticipantLocalStorage){
-    router.push('/profile');
-  }
-
+  
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
         const response = await fetch(`http://localhost:8000/api/participant/users/${userId}`);
         if (response.ok) {
           const result = await response.json();
-          const { email, name, picture, isOnboarded, team } = result;
+          const { email, name, picture, isOnboarded,isParticipant } = result;
           
           setUser({ name, picture, userId, email });
           setTeamMembers([{ name, email, branch: '', collegeName: '',userId: userId }]);
 
-          if (isOnboarded) {
+          if (isOnboarded && isParticipant) {
             router.push('/profile');
             return;
           }
@@ -69,21 +84,23 @@ export default function OnboardingPage() {
               setIsInvited(true);
               setInvitedTeamName(teamResult.teamName);
               setTeamName(teamResult.teamName);
-              setTeamMembers(teamResult.teamMembers.map(member => ({
+                setTeamMembers(teamResult.teamMembers.map(({ member }: { member: TeamMember }) => ({
                 name: member.name,
                 email: member.email,
                 branch: member.branch || '',
-                collegeName: member.collegeName || ''
-              })));
+                collegeName: member.collegeName || '',
+                userId: member.userId || ''
+                })));
               setTeamId(invitedTeamId);
             }
           }
         } else {
-          toast.error("Failed to fetch user details. Please try again.");
+          toast.error("Network error. Please try again.");
         }
       } catch (error) {
-        console.error("Error fetching user details:", error);
         toast.error("An unexpected error occurred. Please try again.");
+      }finally{
+        setIsPageLoading(false);
       }
     };
 
@@ -102,14 +119,14 @@ export default function OnboardingPage() {
     setTeamMembers([...teamMembers, { name: '', email: '', branch: '', collegeName: '' ,userId: ''}]);
   };
 
-  const handleRemoveMember = (index) => {
+  const handleRemoveMember = (index:number) => {
     if (index !== 0) {
       const updatedMembers = teamMembers.filter((_, i) => i !== index);
       setTeamMembers(updatedMembers);
     }
   };
 
-  const handleMemberChange = (index, field, value) => {
+  const handleMemberChange = (index:number, field:string, value:string) => {
     const updatedMembers = [...teamMembers];
     updatedMembers[index][field] = value;
     setTeamMembers(updatedMembers);
@@ -122,18 +139,31 @@ export default function OnboardingPage() {
         return;
       }
 
-      teamMembers[0].branch = branch;
-      teamMembers[0].collegeName = collegeName;
-
       if (!isParticipant) {
         const voterData = {
+          id:userId,
           email: teamMembers[0].email,
           branch,
           collegeName,
           isParticipant,
         };
+        setIsLoading(true);
         await handleSubmission(voterData);
-      } else {
+        setIsLoading(false);
+      } 
+      else if(isInvited){
+        const inviteeData = {
+          id:userId,
+          teamId: invitedTeamId,
+          email: user?.email,
+          branch,
+          collegeName,
+          isParticipant:true,
+        };
+        setIsLoading(true);
+        await handleSubmission(inviteeData);
+      }
+      else {
         setCurrentStep(1);
       }
     } else {
@@ -141,6 +171,14 @@ export default function OnboardingPage() {
         return;
       }
 
+
+
+      const memberIndex = teamMembers.findIndex(member => member.userId === userId);
+       
+        teamMembers[memberIndex].branch = branch;
+        teamMembers[memberIndex].collegeName = collegeName;
+
+ 
       const participantData = {
         teamId,
         teamName,
@@ -152,12 +190,14 @@ export default function OnboardingPage() {
           { type: 'digitalArt', link: digitalArtLink, title: digitalArtTitle }
         ].filter(post => post.link && post.title)
       };
+
       await handleSubmission(participantData);
     }
   };
 
-  const handleSubmission = async (data) => {
+  const handleSubmission = async (data: any) => {
     try {
+      setIsLoading(true);
       const endpoint = isInvited 
         ? 'http://localhost:8000/api/participant/join-team'
         : 'http://localhost:8000/api/participant/onboarding';
@@ -170,23 +210,33 @@ export default function OnboardingPage() {
 
       if (response.ok) {
         const result = await response.json();
-        localStorage.setItem('onboardedUser', JSON.stringify(true));
+        if(result) localStorage.setItem('onboardedUser', JSON.stringify(true));
         toast.success("Submission successful!");
-        if(data.isParticipant){
+        if(data.isParticipant==false){
           localStorage.setItem('isParticipant', JSON.stringify(false));
           router.push('/countdown');
+         
 
         }
         else{
+          localStorage.setItem('isParticipant', JSON.stringify(true));
           router.push('/profile');
         }
        
       } else {
-        toast.error("Failed to submit. Please try again.");
+        if(response.status === 403){
+          toast.error("You are not invited to join this team.");
+        }
+        else{
+          toast.error("Failed to submit. Please try again.");
+        }
+       
       }
     } catch (error) {
       console.error("Submission error:", error);
       toast.error("An unexpected error occurred. Please try again.");
+    }finally{
+      setIsLoading(false);
     }
   };
 
@@ -214,167 +264,177 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-black p-4">
+      {isPageLoading ? <BarLoader color="#ffffff" className='fixed ' />
+      :
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-lg"
-      >
-        <Card className="backdrop-blur-md bg-gray-800/50 shadow-xl border-0">
-          <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold text-white flex items-center justify-center">
-              <FaCamera className="mr-2" /> Lenscape
-            </CardTitle>
-            <CardDescription className="text-xl font-semibold text-gray-300 mt-4">
-              {isInvited 
-                ? `Welcome ${teamMembers[0]?.name.trim().split(" ")[0]}! You've been invited to join ${invitedTeamName}.`
-                : `Hello ${teamMembers[0]?.name.trim().split(" ")[0]}! Let's complete your profile.`}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {currentStep === 0 && (
-              <div>
-                <Label htmlFor="email" className="text-white">Email</Label>
-                <Input
-                  id="email"
-                  value={teamMembers[0]?.email}
-                  disabled
-                  className="bg-gray-700 text-white border-gray-600"
-                  required
-                />
-                <Label htmlFor="branch" className="text-white mt-4">Branch</Label>
-                <Input
-                  id="branch"
-                  value={branch}
-                  onChange={(e) => setBranch(e.target.value)}
-                  className="bg-gray-700 text-white border-gray-600"
-                  required
-                />
-                <Label htmlFor="collegeName" className="text-white mt-4">College Name</Label>
-                <Input
-                  id="collegeName"
-                  value={collegeName}
-                  onChange={(e) => setCollegeName(e.target.value)}
-                  className="bg-gray-700 text-white border-gray-600"
-                  required
-                />
-                {!isInvited && (
-                  <div className="flex items-center mt-4">
-                    <Checkbox
-                      id="isParticipant"
-                      checked={isParticipant}
-                      onCheckedChange={(value) => handleCheckboxChange(!!value)}
-                    />
-                    <Label htmlFor="isParticipant" className="ml-2 text-white">Are you a participant?</Label>
-                  </div>
-                )}
-              </div>
-            )}
-            {currentStep === 1 && (
-              <div>
-                <Label htmlFor="teamName" className="text-white">Team Name</Label>
-                <Input
-                  id="teamName"
-                  value={teamName}
-                  onChange={(e) => setTeamName(e.target.value)}
-                  className="bg-gray-700 text-white border-gray-600"
-                  required
-                  disabled={isInvited}
-                />
-                <Label className="text-white mt-4">Team Members</Label>
-                {teamMembers.map((member, index) => (
-                  <div key={index} className="flex items-center mt-2">
-                    <Input
-                      value={member.name}
-                      onChange={(e) => handleMemberChange(index, 'name', e.target.value)}
-                      placeholder="Member Name"
-                      className="bg-gray-700 text-white border-gray-600 mr-2"
-                      disabled={isInvited || index === 0}
-                    />
-                    <Input
-                      value={member.email}
-                      onChange={(e) => handleMemberChange(index, 'email', e.target.value)}
-                      placeholder="Member Email"
-                      className="bg-gray-700 text-white border-gray-600 mr-2"
-                      disabled={isInvited || index === 0}
-                    />
-                    {!isInvited && index > 0 && (
-                      <Button onClick={() => handleRemoveMember(index)} variant="destructive" className="ml-2">
-                        Remove
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                {!isInvited && (
-                  <Button onClick={handleAddMember} className="mt-4">Add Team Member</Button>
-                )}
-                <div className='mt-4 mb-4 gap-3'>
-                  <Label className="text-white mt-4">Team Leader</Label>
-                  <select
-                    value={teamLeaderIndex}
-                    onChange={(e) => setTeamLeaderIndex(Number(e.target.value))}
-                    className="bg-gray-700 ml-5 text-white border-gray-600 mt-2 rounded-md"
-                    disabled={true}
-                  >
-                    <option value={0}>{teamMembers[0]?.name.trim()}</option>
-                    {/* {teamMembers.map((_, index) => (
-                      <option key={index} value={index}>{teamMembers[0]?.name.trim()}</option>
-                    ))} */}
-                  </select>
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="w-full max-w-lg"
+    >
+      <Card className="backdrop-blur-md bg-gray-800/50 shadow-xl border-0">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-bold text-white flex items-center justify-center">
+            <FaCamera className="mr-2" /> Lenscape
+          </CardTitle>
+          <CardDescription className="text-xl font-semibold text-gray-300 mt-4">
+            {isInvited 
+              ? `Welcome ${user?.name.trim().split(" ")[0]}! You've been invited to join ${invitedTeamName}.`
+              : `Hello ${user?.name.trim().split(" ")[0]}! Let's complete your profile.`}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {currentStep === 0 && (
+            <div>
+              <Label htmlFor="email" className="text-white">Email</Label>
+              <Input
+                id="email"
+                value={user?.email}
+                disabled
+                className="bg-gray-700 text-white border-gray-600"
+                required
+              />
+              <Label htmlFor="branch" className="text-white mt-4">Branch</Label>
+              <Input
+                id="branch"
+                value={branch}
+                onChange={(e) => setBranch(e.target.value)}
+                className="bg-gray-700 text-white border-gray-600"
+                required
+              />
+              <Label htmlFor="collegeName" className="text-white mt-4">College Name</Label>
+              <Input
+                id="collegeName"
+                value={collegeName}
+                onChange={(e) => setCollegeName(e.target.value)}
+                className="bg-gray-700 text-white border-gray-600"
+                required
+              />
+              {!isInvited && (
+                <div className="flex items-center mt-4">
+                  <Checkbox
+                    id="isParticipant"
+                    checked={isParticipant}
+                    onCheckedChange={(value) => handleCheckboxChange(!!value)}
+                  />
+                  <Label htmlFor="isParticipant" className="ml-2 text-white">Are you a participant?</Label>
                 </div>
-                <Label className="text-white mt-4">Photography</Label>
-                <Input
-                  value={photographyLink}
-                  onChange={(e) => setPhotographyLink(e.target.value)}
-                  placeholder="Photography Link"
-                  className="bg-gray-700 text-white border-gray-600 mt-2"
-                />
-                <Input
-                  value={photographyTitle}
-                  onChange={(e) => setPhotographyTitle(e.target.value)}
-                  placeholder="Photography Post Title"
-                  className="bg-gray-700 text-white border-gray-600 mt-2"
-                />
-                <Label className="text-white mt-4">Videography</Label>
-                <Input
-                  value={videographyLink}
-                  onChange={(e) => setVideographyLink(e.target.value)}
-                  placeholder="Videography Link"
-                  className="bg-gray-700 text-white border-gray-600 mt-2"
-                />
-                <Input
-                  value={videographyTitle}
-                  onChange={(e) => setVideographyTitle(e.target.value)}
-                  placeholder="Videography Post Title"
-                  className="bg-gray-700 text-white border-gray-600 mt-2"
-                />
-                <Label className="text-white mt-4">Digital Art</Label>
-                <Input
-                  value={digitalArtLink}
-                  onChange={(e) => setDigitalArtLink(e.target.value)}
-                  placeholder="Digital Art Link"
-                  className="bg-gray-700 text-white border-gray-600 mt-2"
-                />
-                <Input
-                  value={digitalArtTitle}
-                  onChange={(e) => setDigitalArtTitle(e.target.value)}
-                  placeholder="Digital Art Post Title"
-                  className="bg-gray-700 text-white border-gray-600 mt-2"
-                />
-                <p className="text-sm text-gray-400 mt-4">Note: Post titles and links can be edited until the voting day.</p>
+              )}
+            </div>
+          )}
+          {currentStep === 1 && (
+            <div>
+              <Label htmlFor="teamName" className="text-white">Team Name</Label>
+              <Input
+                id="teamName"
+                value={teamName}
+                onChange={(e) => setTeamName(e.target.value)}
+                className="bg-gray-700 text-white border-gray-600"
+                required
+                disabled={isInvited}
+              />
+              <Label className="text-white mt-4">Team Members</Label>
+              {teamMembers.map((member, index) => (
+                <div key={index} className="flex items-center mt-2">
+                  <Input
+                    value={member.name}
+                    onChange={(e) => handleMemberChange(index, 'name', e.target.value)}
+                    placeholder="Member Name"
+                    className="bg-gray-700 text-white border-gray-600 mr-2"
+                    disabled={isInvited || index === 0}
+                  />
+                  <Input
+                    value={member.email}
+                    onChange={(e) => handleMemberChange(index, 'email', e.target.value)}
+                    placeholder="Member Email"
+                    className="bg-gray-700 text-white border-gray-600 mr-2"
+                    disabled={isInvited || index === 0}
+                  />
+                  {!isInvited && index > 0 && (
+                    <Button onClick={() => handleRemoveMember(index)} variant="destructive" className="ml-2">
+                      Remove
+                    </Button>
+                  )}
+                </div>
+              ))}
+              {!isInvited && (
+                <Button onClick={handleAddMember} className="mt-4">Add Team Member</Button>
+              )}
+              <div className='mt-4 mb-4 gap-3'>
+                <Label className="text-white mt-4">Team Leader</Label>
+                <select
+                  value={teamLeaderIndex}
+                  onChange={(e) => setTeamLeaderIndex(Number(e.target.value))}
+                  className="bg-gray-700 ml-5 text-white border-gray-600 mt-2 rounded-md"
+                  disabled={true}
+                >
+                  <option value={0}>{teamMembers[0]?.name.trim()}</option>
+                  {/* {teamMembers.map((_, index) => (
+                    <option key={index} value={index}>{teamMembers[0]?.name.trim()}</option>
+                  ))} */}
+                </select>
               </div>
-            )}
-          </CardContent>
-          <div className="flex justify-between px-4 pb-4">
-            <Button  onClick={() => currentStep === 0 ? router.push('/') : setCurrentStep(0)}>
-              {currentStep === 0 ? "Cancel" : "Back"}
-            </Button>
-            <Button onClick={handleNextStep} disabled={isLoading}>
-              {currentStep === 0 ? (isInvited ? "Join Team" : "Next") : "Submit"}
-            </Button>
-          </div>
-        </Card>
-      </motion.div>
+              <Label className="text-white mt-4">Photography</Label>
+              <Input
+                value={photographyLink}
+                onChange={(e) => setPhotographyLink(e.target.value)}
+                placeholder="Photography Link"
+                className="bg-gray-700 text-white border-gray-600 mt-2"
+              />
+              <Input
+                value={photographyTitle}
+                onChange={(e) => setPhotographyTitle(e.target.value)}
+                placeholder="Photography Post Title"
+                className="bg-gray-700 text-white border-gray-600 mt-2"
+              />
+              <Label className="text-white mt-4">Videography</Label>
+              <Input
+                value={videographyLink}
+                onChange={(e) => setVideographyLink(e.target.value)}
+                placeholder="Videography Link"
+                className="bg-gray-700 text-white border-gray-600 mt-2"
+              />
+              <Input
+                value={videographyTitle}
+                onChange={(e) => setVideographyTitle(e.target.value)}
+                placeholder="Videography Post Title"
+                className="bg-gray-700 text-white border-gray-600 mt-2"
+              />
+              <Label className="text-white mt-4">Digital Art</Label>
+              <Input
+                value={digitalArtLink}
+                onChange={(e) => setDigitalArtLink(e.target.value)}
+                placeholder="Digital Art Link"
+                className="bg-gray-700 text-white border-gray-600 mt-2"
+              />
+              <Input
+                value={digitalArtTitle}
+                onChange={(e) => setDigitalArtTitle(e.target.value)}
+                placeholder="Digital Art Post Title"
+                className="bg-gray-700 text-white border-gray-600 mt-2"
+              />
+              <p className="text-sm text-gray-400 mt-4">Note: Post titles and links can be edited until the voting day.</p>
+            </div>
+          )}
+        </CardContent>
+        <div className="flex justify-between px-4 pb-4">
+          <Button  disabled={isLoading} onClick={() => currentStep === 0 ? router.push('/') : setCurrentStep(0)}>
+            {currentStep === 0 ? "Cancel" : "Back"}
+          </Button>
+          {isLoading && <BarLoader color="#ffffff" />}
+          <Button onClick={handleNextStep} disabled={isLoading}>
+          {currentStep === 0 
+          ? (isInvited 
+              ? "Join Team" 
+              : (isParticipant ? "Next" : "Submit"))
+          : "Submit"}
+
+          </Button>
+        </div>
+      </Card>
+    </motion.div>
+      }
+     
       <ToastContainer />
     </div>
   );
