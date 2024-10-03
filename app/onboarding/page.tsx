@@ -40,10 +40,11 @@ export default function OnboardingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [teamId, setTeamId] = useState(uuidv4());
   const isOnboarded=localStorage.getItem('onboardedUser');
-
-  if(isOnboarded){
+  const isParticipantLocalStorage=localStorage.getItem('isParticipant');
+  if(isOnboarded && isParticipantLocalStorage){
     router.push('/profile');
   }
+
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
@@ -170,7 +171,15 @@ export default function OnboardingPage() {
         const result = await response.json();
         localStorage.setItem('onboardedUser', JSON.stringify(true));
         toast.success("Submission successful!");
-        router.push('/profile');
+        if(data.isParticipant){
+          localStorage.setItem('isParticipant', JSON.stringify(false));
+          router.push('/countdown');
+
+        }
+        else{
+          router.push('/profile');
+        }
+       
       } else {
         toast.error("Failed to submit. Please try again.");
       }
