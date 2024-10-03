@@ -47,7 +47,8 @@
 import { useState, useEffect } from 'react'
 import { motion, useAnimation } from 'framer-motion'
 import { useInView } from 'react-intersection-observer'
-import Image from 'next/image'
+import Image from "next/legacy/image"
+import router from 'next/router'
 
 const useScrollPosition = (): number => {
   const [scrollPosition, setScrollPosition] = useState<number>(0)
@@ -64,7 +65,26 @@ const useScrollPosition = (): number => {
   return scrollPosition
 }
 
+
+
 export default function Homepage() {
+    // Function to handle Google Authentication
+   
+  
+  const handleGoogleAuth = () => {
+    const isOnboarded=localStorage.getItem('onboardedUser');
+    const isParticipantLocalStorage=localStorage.getItem('isParticipant');
+    if (isOnboarded && isParticipantLocalStorage){
+      router.push('/profile');
+      return
+    }
+    else{
+      window.location.href = "http://localhost:8000/auth/google";
+    }
+    // Redirect to the backend Google OAuth route
+    
+  };
+
   const controls = useAnimation()
   const [ref, inView] = useInView()
   const scrollPosition = useScrollPosition()
@@ -76,15 +96,6 @@ export default function Homepage() {
   }, [controls, inView])
 
   const images = [
-    'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
-    'https://images.unsplash.com/photo-1469474968028-56623f02e42e',
-    'https://images.unsplash.com/photo-1501785888041-af3ef285b470',
-    'https://images.unsplash.com/photo-1441974231531-c6227db76b6e',
-    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
-    'https://images.unsplash.com/photo-1472214103451-9374bd1c798e',
-    'https://images.unsplash.com/photo-1490730141103-6cac27aaab94',
-    'https://images.unsplash.com/photo-1501854140801-50d01698950b',
-    'https://images.unsplash.com/photo-1496196614460-48988a57fccf',
     'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
     'https://images.unsplash.com/photo-1469474968028-56623f02e42e',
     'https://images.unsplash.com/photo-1501785888041-af3ef285b470',
@@ -115,13 +126,13 @@ export default function Homepage() {
               visible: { opacity: 1, scale: 1, transition: { duration: 0.5, delay: index * 0.1 } },
               hidden: { opacity: 0, scale: 0.8 },
             }}
-            className="relative overflow-hidden rounded-lg shadow-lg"
+            className="relative overflow-hidden rounded-lg shadow-lg h-60"
           >
             <Image
               src={src}
               alt={`Landscape ${index + 1}`}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              layout='fill'
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               style={{ objectFit: 'cover' }}
               quality={75}
             />
@@ -150,6 +161,7 @@ export default function Homepage() {
             whileHover={{ scale: 0.95 }}
             whileTap={{ scale: 1.05 }}
             className="px-8 py-3 bg-white text-gray-800 rounded-full text-lg font-semibold shadow-lg hover:bg-gray-100 transition-colors duration-300"
+            onClick={handleGoogleAuth}
           >
             Get Started
           </motion.button>
