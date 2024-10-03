@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Edit, Upload } from "lucide-react";
@@ -18,7 +18,7 @@ interface Post {
   title: string;
 }
 
-export function EditPostDialog({ post, onSave }: { post: Post; onSave: (updatedPost: Post) => void }) {
+export function EditPostDialog({ post, onPostUpdate }: { post: Post; onPostUpdate: (title: string, url: string) => void }) {
   const [editedPost, setEditedPost] = useState(post);
   const [isLoading, setIsLoading] = useState(false);
   const [userIsLeader, setUserIsLeader] = useState(); // New state to check if user is leader
@@ -64,7 +64,9 @@ export function EditPostDialog({ post, onSave }: { post: Post; onSave: (updatedP
     setIsLoading(true);
     try {
       const updatedPost = await postApi.editPost(post.id, editedPost);
+      
       if(updatedPost){
+        onPostUpdate(editedPost.title,editedPost.url);
         toast.success(updatedPost.message);
       }
       
@@ -78,10 +80,11 @@ export function EditPostDialog({ post, onSave }: { post: Post; onSave: (updatedP
 
   return (
     <Dialog>
+    
       <DialogTrigger asChild>
         <Button variant="outline"><Edit className="mr-2 h-4 w-4" /> Edit</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px]" aria-description='dialog'>
         <DialogHeader>
           <DialogTitle>Edit {post.category} Post</DialogTitle>
         </DialogHeader>
@@ -107,15 +110,18 @@ export function EditPostDialog({ post, onSave }: { post: Post; onSave: (updatedP
             />
           </div>
         </div>
+        <DialogClose>
         <Button onClick={handleSave} disabled={isLoading || !userIsLeader}>
           {isLoading ? 'Saving...' : 'Save'}
         </Button>
+      </DialogClose>
+       
       </DialogContent>
     </Dialog>
   );
 }
 
-export function UploadDialog({ category, onUpload }: { category: string; onUpload: (newPost: Post) => void }) {
+export function UploadDialog({ category, onPostUpdate }: { category: string; onPostUpdate: (title: string, url: string) => void }) {
   const [newPost, setNewPost] = useState({ title: '', url: '', category,teamId:'',teamName:''});
   const [isLoading, setIsLoading] = useState(false);
   const [userIsLeader, setUserIsLeader] = useState(false); // New state to check if user is leader
@@ -176,6 +182,7 @@ export function UploadDialog({ category, onUpload }: { category: string; onUploa
       const createdPost = await postApi.createPost(newPost);
       console.log(createdPost)
       if(createdPost){
+        onPostUpdate(newPost.title,newPost.url);
         toast.success(createdPost.message);
       }
     
@@ -217,9 +224,11 @@ export function UploadDialog({ category, onUpload }: { category: string; onUploa
             />
           </div>
         </div>
+        <DialogClose>
         <Button onClick={handleUpload} disabled={isLoading || !userIsLeader}>
           {isLoading ? 'Uploading...' : 'Upload'}
         </Button>
+      </DialogClose>
       </DialogContent>
     </Dialog>
   );

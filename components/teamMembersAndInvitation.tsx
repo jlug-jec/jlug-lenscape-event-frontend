@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import useUserStore from "@/store/useUserStore";
 import { toast } from "react-toastify";
-import Image from "next/image";
+import Image from "next/legacy/image";
 
 interface TeamMember {
   _id: string;
@@ -53,6 +53,7 @@ export default function TeamMembersAndInvitation() {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/participant/invitations/${userData.team._id}`);
         if (response.ok) {
           const data = await response.json();
+          console.log(data)
           setTeamMembers(data.teamMembers);
           setPendingInvitations(data.invitations);
         } else {
@@ -72,7 +73,7 @@ export default function TeamMembersAndInvitation() {
   return (
     <Card className="bg-gray-800 border-gray-700">
       <CardHeader>
-        <CardTitle className="text-xl font-semibold">Team Members & Pending Invitations</CardTitle>
+        <CardTitle className="text-xl font-semibold text-neutral-500">Team Members & Pending Invitations</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -80,7 +81,7 @@ export default function TeamMembersAndInvitation() {
           {teamMembers.map((member) => (
             <div key={member._id} className="flex items-center space-x-2 bg-gray-700 p-2 rounded-md">
               <Image src={member.picture} alt={member.name} width={40} height={40} className="rounded-full" />
-              <span>{member.name}</span>
+              <span className="text-neutral-300">{member.name}</span>
             </div>
           ))}
           {/* Display Pending Invitations */}
