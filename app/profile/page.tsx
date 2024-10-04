@@ -18,57 +18,106 @@ interface Team {
   teamName: string;
 }
 export default function ProfilePage() {
-  const { user, loadUser } = useUserStore();
+  const {user,setUser } = useUserStore();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [userPosts, setUserPosts] = useState<Team | null>(null);
   const [loading, setLoading] = useState(true);
   const [totalLikes, setTotalLikes] = useState<number>(0);
   const [role,setRole]=useState<string>("User")
   const router = useRouter();
-  useEffect(() => {
 
-    loadUser();
-    
-  }, [loadUser]);
-
-  useEffect(() => {
-    const fetchUserDetails = async () => {
-
-      if (!user?.userId) return ;
-
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/participant/users/${user.userId}`);
-        if (response.ok) {
-          const result = await response.json();
-          if(result.isParticipant){
-            setRole("Participant")
-          }
-          setUserData(result);
-          // Fetch user posts based on team ID
-          const postsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/team/${result.team._id}`);
-          if (postsResponse.ok) {
-            const fetchedPosts = await postsResponse.json();
-            console.log(fetchedPosts)
-            setUserPosts(fetchedPosts);
-            // Calculate total likes
-            // const likes = fetchedPosts.reduce((sum, post) => sum + post.likes, 0);
-            // setTotalLikes(likes);
-          } else {
-            toast.error("Failed to fetch posts");
-          }
-        } else {
-          toast.error("Failed to fetch user details. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error fetching user details:", error);
-        toast.error("An unexpected error occurred. Please try again.");
-      } finally {
-        setLoading(false);
+    // Load user from localStorage
+    useEffect(() => {
+      const onboardedUser = localStorage.getItem('onboardedUser') === 'true';
+      if (!onboardedUser) {
+        // Case 1: No onboarded user
+        router.push('/');
+        return;
       }
-    };
+      const loadUserFromStorage = () => {
+        try {
+          const storedUser = localStorage.getItem('user');
 
-    fetchUserDetails();
-  }, [user]);
+          if (!storedUser) {
+            // Case 2: No user in localStorage
+            router.push('/');
+            return;
+          }
+          setUser(JSON.parse(storedUser));
+        } catch (error) {
+          console.error('Error loading user from storage:', error);
+          clearUserData();
+          router.push('/');
+        }
+      };
+  
+      loadUserFromStorage();
+    }, [router]);
+  
+    // Fetch user details when user is loaded
+    useEffect(() => {
+      const fetchUserDetails = async () => {
+        if (!user?.userId) {
+          setLoading(false);
+          return;
+        }
+  
+        try {
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/participant/users/${user.userId}`
+          );
+  
+          if (response.ok) {
+            // Case 1: Valid user, normal flow
+            const result = await response.json();
+            setUserData(result);
+  
+            if (result.isParticipant) {
+              setRole('Participant');
+              await fetchUserPosts(result.team._id);
+            }
+          } else if (response.status === 404) {
+            // Case 3: Invalid user ID
+            clearUserData();
+            toast.error('User not found, Please create your account');
+            router.push('/');
+          } else {
+            toast.error('Failed to fetch user details. Please try again.');
+          }
+        } catch (error) {
+          console.error('Error fetching user details:', error);
+          toast.error('An unexpected error occurred. Please try again.');
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchUserDetails();
+    }, [user, router]);
+  const fetchUserPosts = async (teamId: string) => {
+    try {
+      const postsResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/posts/team/${teamId}`
+      );
+      
+      if (postsResponse.ok) {
+        const fetchedPosts = await postsResponse.json();
+        setUserPosts(fetchedPosts);
+      } else {
+        toast.error('Failed to fetch posts');
+      }
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      toast.error('Failed to fetch posts');
+    }
+  };
+
+  const clearUserData = () => {
+    localStorage.removeItem('onboardedUser');
+    localStorage.removeItem('isParticipant');
+    localStorage.removeItem('user');
+    setUserData(null);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white">
