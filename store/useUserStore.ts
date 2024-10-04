@@ -19,7 +19,7 @@ interface Domain {
 interface UserStore {
   user: User | null; // The user object or null if not authenticated
   setUser: (user: User) => void; // Method to set the user
-  loadUser: () => void; // Method to load the user from local storage
+  loadUser: () => User | null;  // Method to load the user from local storage
 }
 
 
@@ -30,9 +30,15 @@ const useStore = create<UserStore>((set) => ({
     localStorage.setItem('user', JSON.stringify(user));
   },
   loadUser: () => {
-    const user = JSON.parse(localStorage.getItem('user') || 'null');
-    set({ user });
-  },
+    try {
+      const storedUser = localStorage.getItem('user');
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      set({ user });
+      return user; // Return the loaded user
+    } catch (error) {
+      return null;
+    }
+  }  
 }));
 
 export default useStore;
