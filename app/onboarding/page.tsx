@@ -15,6 +15,7 @@ import { FaCamera } from 'react-icons/fa';
 import "../../app/globals.css";
 import { useSearchParams } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
+import local from 'next/font/local';
 
 interface TeamMember {
   name: string;
@@ -83,7 +84,8 @@ interface TeamMember {
         if (loadedUser && loadedUser.userId) {
           userId = loadedUser.userId;
         } else {
-          console.log("No user found in storage");
+          router.push('/');
+          return
         }
       }
 
@@ -95,7 +97,7 @@ interface TeamMember {
     initializeUser();
   }, []);
   const fetchUserDetails = async (userId:string) => {
-    setIsPageLoading(true); // Set loading state
+     // Set loading state
     try {
       const response = await fetch(`https://jlug-lenscape-event-backend.onrender.com/api/participant/users/${userId}`);
       if (response.ok) {
@@ -130,8 +132,12 @@ interface TeamMember {
             setTeamId(invitedTeamId);
           }
         }
-      } else {
-        toast.error("Network error. Please try again.");
+      } else if(response.status === 404){
+        localStorage.removeItem('onboardedUser');
+        localStorage.removeItem('isParticipant');
+        localStorage.removeItem('user');
+        toast.error("User not found, Please create your account");
+        router.push('/');
       }
     } catch (error) {
       toast.error("An unexpected error occurred. Please try again.");

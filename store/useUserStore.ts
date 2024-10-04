@@ -1,6 +1,6 @@
 import {create} from 'zustand';
 
-interface User {
+export interface User {
   userId: string | null ; // Assuming user has an ID
   name: string;
   picture: string;
