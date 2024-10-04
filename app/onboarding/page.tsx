@@ -175,7 +175,7 @@ interface TeamMember {
 
       if (!isParticipant) {
         const voterData = {
-          id:userId,
+          id:user?.userId,
           email: teamMembers[0].email,
           branch,
           collegeName,
@@ -187,7 +187,7 @@ interface TeamMember {
       } 
       else if(isInvited){
         const inviteeData = {
-          id:userId,
+          id:user?.userId,
           teamId: invitedTeamId,
           email: user?.email,
           branch,
