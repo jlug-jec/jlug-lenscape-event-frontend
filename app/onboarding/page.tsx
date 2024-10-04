@@ -64,36 +64,36 @@ interface TeamMember {
   const [isDriveChecking,setIsDriveChecking]=useState(false);
   let userId:string | null 
   useEffect(() => {
-    const isOnboarded = localStorage.getItem('onboardedUser') === 'true';
-    const isParticipantStatus = localStorage.getItem('isParticipant') === 'true';
-    
-    // If the user is onboarded and a participant, redirect immediately
-    if (isOnboarded && isParticipantStatus) {
-      router.push('/profile');
-      return; // Exit early to prevent further execution
-    } 
- 
+    const initializeUser = async () => {
+      const isOnboarded = localStorage.getItem('onboardedUser') === 'true';
+      const isParticipantStatus = localStorage.getItem('isParticipant') === 'true';
+  
 
-  
-    // Get userId from URL search params
-    let userId = searchParams.get('userId');
-  
-    // If userId is not found in params, load user
-    if (!userId) {
-      loadUser();
-      if(user) userId = user?.userId; // Make sure user is loaded before accessing userId
-    }
-  
-    // Fetch user details if we have a userId
-    if (userId) {
-      fetchUserDetails(userId);
-    }else {
-      router.push('/');
-      return;
-    }
-    
+      // Handle redirects first
+      if (isOnboarded && isParticipantStatus) {
+        router.push('/profile');
+        return;
+      }
+
+      let userId = searchParams.get('userId');
+      
+      if (!userId) {
+        const loadedUser = loadUser(); // Now returns User | null
+        
+        if (loadedUser && loadedUser.userId) {
+          userId = loadedUser.userId;
+        } else {
+          console.log("No user found in storage");
+        }
+      }
+
+      if (userId) {
+        await fetchUserDetails(userId);
+      }
+    };
+
+    initializeUser();
   }, []);
-  
   const fetchUserDetails = async (userId:string) => {
     setIsPageLoading(true); // Set loading state
     try {
@@ -434,8 +434,9 @@ interface TeamMember {
                     id="isParticipant"
                     checked={isParticipant}
                     onCheckedChange={(value) => handleCheckboxChange(!!value)}
+                    className='outline border-gray-600'
                   />
-                  <Label htmlFor="isParticipant" className="ml-2 text-white">Are you a participant?</Label>
+                  <Label htmlFor="isParticipant" className="ml-2  text-white border-slate-200">Are you a participant?</Label>
                 </div>
               )}
             </div>
