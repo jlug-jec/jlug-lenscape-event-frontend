@@ -89,7 +89,7 @@ export default function Homepage() {
       return
     }
     else{
-      window.location.href = "http://localhost:8000/auth/google";
+      window.location.href = "https://jlug-lenscape-event-backend.onrender.com/auth/google";
     }
     // Redirect to the backend Google OAuth route
     

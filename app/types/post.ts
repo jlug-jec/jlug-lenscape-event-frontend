@@ -7,5 +7,6 @@ export interface Post {
     url: string;
     likes: number;
     domain: string;
-    votes: string[]
+    votes: string[],
+    type: 'image' | 'video';
   }

@@ -11,13 +11,14 @@ export const postApi = {
       });
   
       if (!response.ok) {
-        throw new Error('Failed to create post');
+        throw new Error('Invalid image video format or link is inaccessible');
       }
   
       return await response.json();
     },
   
     editPost: async (postId:string, postData:Post) => {
+ 
       const response = await fetch(`${API_URL}/api/posts/${postId}`, {
         method: 'PUT',
         headers: {
@@ -27,7 +28,7 @@ export const postApi = {
       });
   
       if (!response.ok) {
-        throw new Error('Failed to edit post');
+        throw new Error('Invalid image video format or link is inaccessible');
       }
   
       return await response.json();

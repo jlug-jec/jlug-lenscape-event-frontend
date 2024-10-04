@@ -14,6 +14,7 @@ export default function UserInfoCard({ userData: userData }: { userData: UserDat
             alt="Profile Picture"
             layout="fill"
             objectFit="cover"
+            priority
           />
         </div>
         <CardTitle className="text-2xl font-bold text-neutral-300">{userData?.name}</CardTitle>
