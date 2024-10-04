@@ -235,7 +235,7 @@ interface TeamMember {
       setIsLoading(true);
       const endpoint = isInvited 
         ? 'https://jlug-lenscape-event-backend.onrender.com/api/participant/join-team'
-        :  'https://jlug-lenscape-event-backend.onrender.com0/api/participant/onboarding';
+        :  'https://jlug-lenscape-event-backend.onrender.com/api/participant/onboarding';
       
       const response = await fetch(endpoint, {
         method: 'POST',
