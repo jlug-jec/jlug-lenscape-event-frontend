@@ -16,6 +16,13 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Lenscape 2024",
   description: "Let the world see through your eyes.",
+  icons: [
+      {
+        rel: "icon",
+        href: "/favicon.ico",
+        url: "/favicon.ico",
+      }
+    ],
 };
 
 export default function RootLayout({
@@ -25,6 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <link rel="icon" href="/favicon.ico" />
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
