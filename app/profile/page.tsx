@@ -11,13 +11,20 @@ import { toast } from "react-toastify"
 import { ClipLoader } from "react-spinners"
 import { UserData } from "../types/user"
 import { Post } from "../types/post"
+import { useRouter } from "next/navigation"
+
+interface Team {
+  posts: Post[];
+  teamName: string;
+}
 export default function ProfilePage() {
   const { user, loadUser } = useUserStore();
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [userPosts, setUserPosts] = useState<Post[] | null>(null);
+  const [userPosts, setUserPosts] = useState<Team | null>(null);
   const [loading, setLoading] = useState(true);
   const [totalLikes, setTotalLikes] = useState<number>(0);
   const [role,setRole]=useState<string>("User")
+  const router = useRouter();
   useEffect(() => {
 
     loadUser();
@@ -26,7 +33,8 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const fetchUserDetails = async () => {
-      if (!user?.userId) return;
+
+      if (!user?.userId) return ;
 
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/participant/users/${user.userId}`);
@@ -40,6 +48,7 @@ export default function ProfilePage() {
           const postsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/team/${result.team._id}`);
           if (postsResponse.ok) {
             const fetchedPosts = await postsResponse.json();
+            console.log(fetchedPosts)
             setUserPosts(fetchedPosts);
             // Calculate total likes
             // const likes = fetchedPosts.reduce((sum, post) => sum + post.likes, 0);
@@ -79,7 +88,7 @@ export default function ProfilePage() {
             ) : (
               <>
                 {userData?.team?._id && <TeamMembersAndInvitations teamId={userData.team._id} />}
-                {userPosts && <ParticipantAnalytics userPosts={userPosts} totalLikes={totalLikes} />}
+                {userPosts && <ParticipantAnalytics userPosts={userPosts.posts} totalLikes={totalLikes} />}
               </>
             )}
             <LikedPosts />

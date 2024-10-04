@@ -10,13 +10,16 @@ import { toast } from 'react-toastify';
 import useUserStore from '@/store/useUserStore';
 import "react-toastify/dist/ReactToastify.css";
 import { Post } from '../app/types/post';
+import { BarLoader } from 'react-spinners';
 
-export function EditPostDialog({ post, onPostUpdate }: { post: Post; onPostUpdate: (title: string, url: string) => void }) {
+export function EditPostDialog({ post, onPostUpdate }: { post: Post; onPostUpdate: (title: string, url: string,type:string) => void }) {
   const [editedPost, setEditedPost] = useState(post);
   const [isLoading, setIsLoading] = useState(false);
   const [userIsLeader, setUserIsLeader] = useState(); // New state to check if user is leader
   const { user, loadUser } = useUserStore();
   const [userData, setUserData] = useState({});
+
+
 
   useEffect(() => {
     loadUser();
@@ -56,10 +59,15 @@ export function EditPostDialog({ post, onPostUpdate }: { post: Post; onPostUpdat
     }
     setIsLoading(true);
     try {
-      const updatedPost = await postApi.editPost(post.id, editedPost);
+      const isValidGoogleDriveLink = (link:string) => link.includes('drive.google.com');
+      if(!isValidGoogleDriveLink(editedPost.url)){
+        toast.error("Please provide a valid Google Drive link");
+        return
+      }
+      const updatedPost = await postApi.editPost(post._id, editedPost);
       
       if(updatedPost){
-        onPostUpdate(editedPost.title,editedPost.url);
+        onPostUpdate(editedPost.title,editedPost.url,editedPost.type);
         toast.success(updatedPost.message);
       }
       
@@ -70,7 +78,14 @@ export function EditPostDialog({ post, onPostUpdate }: { post: Post; onPostUpdat
       setIsLoading(false);
     }
   };
-
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center fixed inset-0 bg-gray-700 bg-opacity-50 z-50">
+      <BarLoader color='#ffff'  />
+      </div>
+    )
+  
+}
   return (
     <Dialog>
     
@@ -102,11 +117,25 @@ export function EditPostDialog({ post, onPostUpdate }: { post: Post; onPostUpdat
               required
             />
           </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="type" className="text-right">Media Type</Label>
+            <select
+              id="type"
+              value={editedPost.type}
+              onChange={(e) => setEditedPost({ ...editedPost, type: e.target.value as "image" | "video" })}
+              className="col-span-3"
+            >
+              <option value="image">Image</option>
+              <option value="video">Video</option>
+            </select>
+          </div>
         </div>
         <DialogClose>
-        <Button onClick={handleSave} disabled={isLoading || !userIsLeader}>
-          {isLoading ? 'Saving...' : 'Save'}
-        </Button>
+          {isLoading ? <BarLoader color="#ffffff" /> : 
+            <Button onClick={handleSave} disabled={isLoading || !userIsLeader}>
+            {isLoading ? 'Saving...' : 'Save'}
+          </Button>}
+      
       </DialogClose>
        
       </DialogContent>
@@ -114,8 +143,8 @@ export function EditPostDialog({ post, onPostUpdate }: { post: Post; onPostUpdat
   );
 }
 
-export function UploadDialog({ category, onPostUpdate }: { category: string; onPostUpdate: (title: string, url: string) => void }) {
-  const [newPost, setNewPost] = useState({ title: '', url: '', category,teamId:'',teamName:''});
+export function UploadDialog({ category, onPostUpdate }: { category: string; onPostUpdate: (title: string, url: string,type:string) => void }) {
+  const [newPost, setNewPost] = useState({ title: '', url: '', category, teamId:'', teamName:'', type: 'image' });
   const [isLoading, setIsLoading] = useState(false);
   const [userIsLeader, setUserIsLeader] = useState(false); // New state to check if user is leader
   const { user, loadUser } = useUserStore();
@@ -172,6 +201,12 @@ export function UploadDialog({ category, onPostUpdate }: { category: string; onP
     try {
       setIsLoading(true);
       console.log(isLoading)
+      const isValidGoogleDriveLink = (link:string) => link.includes('drive.google.com');
+      
+      if(!isValidGoogleDriveLink(newPost.url)){
+        toast.error("Please provide a valid Google Drive link");
+        return
+      }
       const createdPost = await postApi.createPost({
         ...newPost,
         _id: '',
@@ -180,10 +215,10 @@ export function UploadDialog({ category, onPostUpdate }: { category: string; onP
         domain: '',
         votes: [],
         category: category as "photography" | "videography" | "digital art",
+        type: newPost.type as "image" | "video"
       });
-      console.log(createdPost)
       if(createdPost){
-        onPostUpdate(newPost.title,newPost.url);
+        onPostUpdate(newPost.title,newPost.url,newPost.type);
         toast.success(createdPost.message);
       }
     
@@ -194,7 +229,15 @@ export function UploadDialog({ category, onPostUpdate }: { category: string; onP
       setIsLoading(false);
     }
   };
-
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center fixed inset-0 bg-gray-700 bg-opacity-50 z-50">
+      <BarLoader color='#ffff'  />
+      </div>
+    )
+  
+}
+ 
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -223,6 +266,18 @@ export function UploadDialog({ category, onPostUpdate }: { category: string; onP
               onChange={(e) => setNewPost({ ...newPost, url: e.target.value })}
               className="col-span-3"
             />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="type" className="text-right">Media Type</Label>
+            <select
+              id="type"
+              value={newPost.type}
+              onChange={(e) => setNewPost({ ...newPost, type: e.target.value as "image" | "video" })}
+              className="col-span-3"
+            >
+              <option value="image">Image</option>
+              <option value="video">Video</option>
+            </select>
           </div>
         </div>
         <DialogClose>

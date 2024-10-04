@@ -1,12 +1,12 @@
 "use client"
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { BarLoader } from 'react-spinners'
+import { BarLoader, CircleLoader } from 'react-spinners'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -23,13 +23,10 @@ interface TeamMember {
   collegeName: string;
   userId: string | null; // Can change this to string | null if userId can be null
 }
-
-
 export default function OnboardingPage() {
   const router = useRouter();
-  const { user,setUser } = useUserStore();
+  const { user,setUser,loadUser } = useUserStore();
   const searchParams = useSearchParams();
-  let userId = searchParams.get('userId');
   const invitedTeamId = searchParams.get('teamId');
   
   const [isInvited, setIsInvited] = useState(false);
@@ -39,73 +36,110 @@ export default function OnboardingPage() {
   const [isParticipant, setIsParticipant] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
   const [teamName, setTeamName] = useState('');
-const [teamMembers, setTeamMembers] = useState<TeamMember[]>([ { name: '', email: '', branch: '', collegeName: '', userId: '' }] as any[]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([ { name: '', email: '', branch: '', collegeName: '', userId: '' }] as any[]);
+
 
 interface TeamMember {
   name: string;
   email: string;
   branch: string;
   collegeName: string;
-  userId: string | null;
+  userId: string | null | undefined;
   [key: string]: any;
 }
 
   const [photographyLink, setPhotographyLink] = useState('');
   const [photographyTitle, setPhotographyTitle] = useState('');
+  const [photoType, setPhotoType] = useState('image');
   const [videographyLink, setVideographyLink] = useState('');
   const [videographyTitle, setVideographyTitle] = useState('');
+  const [videoType, setVideoType] = useState('');
   const [digitalArtLink, setDigitalArtLink] = useState('');
   const [digitalArtTitle, setDigitalArtTitle] = useState('');
+  const [digitalArtType, setDigitalArtType] = useState(null);
   const [teamLeaderIndex, setTeamLeaderIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [teamId, setTeamId] = useState(uuidv4());
-  
+  const [isDriveChecking,setIsDriveChecking]=useState(false);
+  let userId:string | null 
   useEffect(() => {
-    const fetchUserDetails = async () => {
-      try {
-        const response = await fetch(`http://localhost:8000/api/participant/users/${userId}`);
-        if (response.ok) {
-          const result = await response.json();
-          const { email, name, picture, isOnboarded,isParticipant } = result;
-          
-          setUser({ name, picture, userId, email });
-          setTeamMembers([{ name, email, branch: '', collegeName: '',userId: userId }]);
+    const isOnboarded = localStorage.getItem('onboardedUser') === 'true';
+    const isParticipantStatus = localStorage.getItem('isParticipant') === 'true';
+    
+    // If the user is onboarded and a participant, redirect immediately
+    if (isOnboarded && isParticipantStatus) {
+      router.push('/profile');
+      return; // Exit early to prevent further execution
+    } 
+ 
 
-          if (isOnboarded && isParticipant) {
-            router.push('/profile');
-            return;
-          }
-
-          if (invitedTeamId) {
-            const teamResponse = await fetch(`http://localhost:8000/api/participant/team/${invitedTeamId}`);
-            if (teamResponse.ok) {
-              const teamResult = await teamResponse.json();
-              setIsInvited(true);
-              setInvitedTeamName(teamResult.teamName);
-              setTeamName(teamResult.teamName);
-                setTeamMembers(teamResult.teamMembers.map(({ member }: { member: TeamMember }) => ({
-                name: member.name,
-                email: member.email,
-                branch: member.branch || '',
-                collegeName: member.collegeName || '',
-                userId: member.userId || ''
-                })));
-              setTeamId(invitedTeamId);
-            }
-          }
-        } else {
-          toast.error("Network error. Please try again.");
+  
+    // Get userId from URL search params
+    let userId = searchParams.get('userId');
+  
+    // If userId is not found in params, load user
+    if (!userId) {
+      loadUser();
+      if(user) userId = user?.userId; // Make sure user is loaded before accessing userId
+    }
+  
+    // Fetch user details if we have a userId
+    if (userId) {
+      fetchUserDetails(userId);
+    }else {
+      router.push('/');
+      return;
+    }
+    
+  }, []);
+  
+  const fetchUserDetails = async (userId:string) => {
+    setIsPageLoading(true); // Set loading state
+    try {
+      const response = await fetch(`https://jlug-lenscape-event-backend.onrender.com/api/participant/users/${userId}`);
+      if (response.ok) {
+        const result = await response.json();
+        const { email, name, picture, isOnboarded, isParticipant } = result;
+  
+        // Update user state
+        setUser({ name, picture, userId, email });
+        setTeamMembers([{ name, email, branch: '', collegeName: '', userId }]);
+  
+        // Redirect if the user is onboarded and a participant
+        if (isOnboarded && isParticipant) {
+          router.push('/profile');
+          return;
         }
-      } catch (error) {
-        toast.error("An unexpected error occurred. Please try again.");
-      }finally{
-        setIsPageLoading(false);
+  
+        // If invited to a team, fetch team details
+        if (invitedTeamId) {
+          const teamResponse = await fetch(`https://jlug-lenscape-event-backend.onrender.com/api/participant/team/${invitedTeamId}`);
+          if (teamResponse.ok) {
+            const teamResult = await teamResponse.json();
+            setIsInvited(true);
+            setInvitedTeamName(teamResult.teamName);
+            setTeamName(teamResult.teamName);
+            setTeamMembers(teamResult.teamMembers.map(({ member }: { member: TeamMember }) => ({
+              name: member.name,
+              email: member.email,
+              branch: member.branch || '',
+              collegeName: member.collegeName || '',
+              userId: member.userId || ''
+            })));
+            setTeamId(invitedTeamId);
+          }
+        }
+      } else {
+        toast.error("Network error. Please try again.");
       }
-    };
-
-    fetchUserDetails();
-  }, [userId, invitedTeamId, router, setUser]);
+    } catch (error) {
+      toast.error("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsPageLoading(false); // Reset loading state
+    }
+  };
+  
 
   const handleCheckboxChange = (checked: boolean) => {
     setIsParticipant(checked);
@@ -167,30 +201,31 @@ interface TeamMember {
         setCurrentStep(1);
       }
     } else {
-      if (!validateSubmission()) {
+      if (!await validateSubmission()) {
         return;
       }
+      console.log(photoType,videoType,digitalArtType);
 
 
 
-      const memberIndex = teamMembers.findIndex(member => member.userId === userId);
-       
+        const memberIndex = teamMembers.findIndex(member => member.userId === user?.userId);
         teamMembers[memberIndex].branch = branch;
         teamMembers[memberIndex].collegeName = collegeName;
+        console.log(1)
+        console.log(photoType,videoType,digitalArtType);
 
- 
       const participantData = {
         teamId,
         teamName,
         teamMembers,
         teamLeader: teamMembers[teamLeaderIndex],
         posts: [
-          { type: 'photography', link: photographyLink, title: photographyTitle },
-          { type: 'videography', link: videographyLink, title: videographyTitle },
-          { type: 'digitalArt', link: digitalArtLink, title: digitalArtTitle }
+          { category: 'photography', link: photographyLink, title: photographyTitle,type:"image"},
+          { category: 'videography', link: videographyLink, title: videographyTitle,type:"video" },
+          { category: 'digitalArt', link: digitalArtLink, title: digitalArtTitle,type:"image" }
         ].filter(post => post.link && post.title)
       };
-
+      console.log(participantData);
       await handleSubmission(participantData);
     }
   };
@@ -199,8 +234,8 @@ interface TeamMember {
     try {
       setIsLoading(true);
       const endpoint = isInvited 
-        ? 'http://localhost:8000/api/participant/join-team'
-        : 'http://localhost:8000/api/participant/onboarding';
+        ? 'https://jlug-lenscape-event-backend.onrender.com/api/participant/join-team'
+        :  'https://jlug-lenscape-event-backend.onrender.com0/api/participant/onboarding';
       
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -240,27 +275,110 @@ interface TeamMember {
     }
   };
 
-  const validateSubmission = () => {
+//   async function checkFileAccessibility(url:string,title:string) {
+//     try {
+//         setIsDriveChecking(true);
+//         const response = await fetch('http://localhost:8000/api/posts/isPublicDrive', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//             },
+//             body: JSON.stringify({ url }),
+//         });
+
+//         const result = await response.json();
+  
+//         if (response.ok) {
+//             if (!result.isPublic) {
+//                 toast.error(`The file at ${url} is not public (Content Type: ${result.contentType}).`);
+//                 return false; // Not public
+//             } 
+//             else {
+//               console.log(2)
+//                 if(title=='photographyTitle'){
+//                    setPhotoType(result.type);
+//                 }
+//                 else if(title=='videographyTitle'){
+//                    setVideoType(result.type);
+//                 }
+//                 else if(title=='digitalArtTitle'){
+//                    setDigitalArtType(result.type);
+//                 }
+//                 toast.success(`The file at ${url} is public.`);
+//                 return true; // Public
+//             }
+//         } else {
+
+//             toast.error(`The file at ${url} is not accessible (status code: ${result.statusCode}).`);
+//             return false; // Not accessible
+//         }
+//     } catch (error) {
+//         console.error(`Error checking URL: ${url}`);
+//         toast.error(`Error checking URL: ${url}`);
+//         return false; // Error in checking
+//     }
+//     finally{
+//       setIsDriveChecking(false);
+//     }
+// }
+
+  const validateSubmission = async () => {
     const memberEmails = teamMembers.map(member => member.email.toLowerCase());
     const uniqueEmails = new Set(memberEmails);
 
     if (uniqueEmails.size !== memberEmails.length) {
-      toast.error("All team members must have unique email addresses.");
-      return false;
+        toast.error("All team members must have unique email addresses.");
+        return false;
     }
 
     if (!photographyLink && !videographyLink && !digitalArtLink) {
-      toast.error("At least one link (Photography, Videography, or Digital Art) must be provided.");
-      return false;
+        toast.error("At least one link (Photography, Videography, or Digital Art) must be provided.");
+        return false;
     }
 
     if ((photographyLink && !photographyTitle) || (videographyLink && !videographyTitle) || (digitalArtLink && !digitalArtTitle)) {
-      toast.error("Each provided link must have a corresponding post title.");
-      return false;
+        toast.error("Each provided link must have a corresponding post title.");
+        return false;
     }
 
-    return true;
-  };
+    const isValidGoogleDriveLink = (link:string) => link.includes('drive.google.com');
+
+    // Validate each link format
+    
+    if (photographyLink && !isValidGoogleDriveLink(photographyLink)) {
+        toast.error("Photography link must be a valid Google Drive link.");
+        return false;
+    }
+
+    if (videographyLink && !isValidGoogleDriveLink(videographyLink)) {
+        toast.error("Videography link must be a valid Google Drive link.");
+        return false;
+    }
+
+    if (digitalArtLink && !isValidGoogleDriveLink(digitalArtLink)) {
+        toast.error("Digital Art link must be a valid Google Drive link.");
+        return false;
+    }
+
+    // Check accessibility of valid links
+    // const linksToCheck = [
+    //     { link: photographyLink, title: photographyTitle },
+    //     { link: videographyLink, title: videographyTitle },
+    //     { link: digitalArtLink, title: digitalArtTitle },
+    // ];
+
+    // for (const { link, title } of linksToCheck) {
+    //     if (link && title) {
+    //         const isPublic = await checkFileAccessibility(link, title);
+    //         if (!isPublic) {
+    //             toast.error(`The link for ${title} is not public or accessible.`);
+    //             return false; // If any link is not public, validation fails
+    //         }
+    //     }
+    // }
+
+    return true; // All validations passed
+};
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-black p-4">
@@ -387,7 +505,7 @@ interface TeamMember {
                 placeholder="Photography Post Title"
                 className="bg-gray-700 text-white border-gray-600 mt-2"
               />
-              <Label className="text-white mt-4">Videography</Label>
+              <Label className="text-white mt-16">Videography</Label>
               <Input
                 value={videographyLink}
                 onChange={(e) => setVideographyLink(e.target.value)}
@@ -418,11 +536,22 @@ interface TeamMember {
           )}
         </CardContent>
         <div className="flex justify-between px-4 pb-4">
-          <Button  disabled={isLoading} onClick={() => currentStep === 0 ? router.push('/') : setCurrentStep(0)}>
+          <Button  disabled={isLoading || isDriveChecking} onClick={() => currentStep === 0 ? router.push('/') : setCurrentStep(0)}>
             {currentStep === 0 ? "Cancel" : "Back"}
           </Button>
           {isLoading && <BarLoader color="#ffffff" />}
-          <Button onClick={handleNextStep} disabled={isLoading}>
+          <div className="flex items-center space-x-2">
+  {isDriveChecking && (
+    <>
+      <CircleLoader color="#4CAF50" size={16} />
+      <p className="text-green-500 text-xs font-medium animate-pulse">
+        Verifying Google Drive link...
+      </p>
+    </>
+  )}
+</div>
+
+          <Button onClick={handleNextStep} disabled={isLoading || isDriveChecking}>
           {currentStep === 0 
           ? (isInvited 
               ? "Join Team" 

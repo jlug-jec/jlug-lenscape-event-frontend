@@ -24,7 +24,6 @@ export default function TeamMembersAndInvitation({teamId}: {teamId: string}) {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/participant/invitations/${teamId}`);
         if (response.ok) {
           const data = await response.json();
-          console.log(data)
           setTeamMembers(data.teamMembers);
           setPendingInvitations(data.invitations);
         } else {
