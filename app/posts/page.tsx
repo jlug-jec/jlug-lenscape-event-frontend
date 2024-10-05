@@ -57,7 +57,7 @@ export default function LenscapeVoting() {
   }
 
   const outOfFrame = (name: string, idx: number) => {
-    console.log(`${name} (${idx}) left the screen!`, currentIndexRef.current)
+   
     if (currentIndexRef.current >= idx) {
       childRefs[idx].current.restoreCard()
     }

@@ -200,7 +200,6 @@ export function UploadDialog({ category, onPostUpdate }: { category: string; onP
   
     try {
       setIsLoading(true);
-      console.log(isLoading)
       const isValidGoogleDriveLink = (link:string) => link.includes('drive.google.com');
       
       if(!isValidGoogleDriveLink(newPost.url)){
