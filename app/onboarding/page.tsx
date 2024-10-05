@@ -213,15 +213,14 @@ interface TeamMember {
       if (!await validateSubmission()) {
         return;
       }
-      console.log(photoType,videoType,digitalArtType);
+
 
 
 
         const memberIndex = teamMembers.findIndex(member => member.userId === user?.userId);
         teamMembers[memberIndex].branch = branch;
         teamMembers[memberIndex].collegeName = collegeName;
-        console.log(1)
-        console.log(photoType,videoType,digitalArtType);
+       
 
       const participantData = {
         teamId,
@@ -234,7 +233,7 @@ interface TeamMember {
           { category: 'digitalArt', link: digitalArtLink, title: digitalArtTitle,type:"image" }
         ].filter(post => post.link && post.title)
       };
-      console.log(participantData);
+    
       await handleSubmission(participantData);
     }
   };

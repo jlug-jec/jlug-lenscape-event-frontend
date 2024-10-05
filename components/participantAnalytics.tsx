@@ -15,7 +15,7 @@ function PostCard({ post, category }: { post?: Post; category: string }) {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false); // State to manage modal visibility
 
   const handlePostUpdate = (title: string, url: string) => {
-      console.log(title, url);
+    
       setCurrentPost((currentPost: Post | undefined) => {
           return {
               ...currentPost!,
@@ -81,7 +81,7 @@ function PostCard({ post, category }: { post?: Post; category: string }) {
 
 
 export default function ParticipantAnalytics({ userPosts, totalLikes }:{ userPosts:  Post[] | null ; totalLikes: number }) {
-  console.log(userPosts);
+ 
   return (
     <Card className="bg-gray-800 border-gray-700">
       <CardHeader>
