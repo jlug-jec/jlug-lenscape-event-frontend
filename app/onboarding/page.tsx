@@ -39,6 +39,9 @@ export default function OnboardingPage() {
   const [teamName, setTeamName] = useState('');
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([ { name: '', email: '', branch: '', collegeName: '', userId: '' }] as any[]);
 
+   
+   
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
 interface TeamMember {
   name: string;
@@ -99,7 +102,7 @@ interface TeamMember {
   const fetchUserDetails = async (userId:string) => {
      // Set loading state
     try {
-      const response = await fetch(`https://jlug-lenscape-event-backend.onrender.com/api/participant/users/${userId}`);
+      const response = await fetch(`${API_URL}/api/participant/users/${userId}`);
       if (response.ok) {
         const result = await response.json();
         const { email, name, picture, isOnboarded, isParticipant } = result;
@@ -116,7 +119,7 @@ interface TeamMember {
   
         // If invited to a team, fetch team details
         if (invitedTeamId) {
-          const teamResponse = await fetch(`https://jlug-lenscape-event-backend.onrender.com/api/participant/team/${invitedTeamId}`);
+          const teamResponse = await fetch(`${API_URL}/api/participant/team/${invitedTeamId}`);
           if (teamResponse.ok) {
             const teamResult = await teamResponse.json();
             setIsInvited(true);
@@ -240,8 +243,8 @@ interface TeamMember {
     try {
       setIsLoading(true);
       const endpoint = isInvited 
-        ? 'https://jlug-lenscape-event-backend.onrender.com/api/participant/join-team'
-        :  'https://jlug-lenscape-event-backend.onrender.com/api/participant/onboarding';
+        ? `${API_URL}/api/participant/join-team`
+        :  `${API_URL}/api/participant/onboarding`;
       
       const response = await fetch(endpoint, {
         method: 'POST',
