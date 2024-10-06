@@ -23,7 +23,7 @@ export default function LockedPosts() {
               <p className="text-lg mb-4 text-gray-400">Participate in competition to see your analytics</p>
               <Button variant="outline" className="bg-gray-600 hover:bg-gray-700 text-white"
               onClick={() => {
-                router.push("/onboarding")
+                router.push("/")
               }}
               >
                 Unlock

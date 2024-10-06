@@ -182,8 +182,22 @@ export const ProductCard = ({
 
 import { Camera, Sparkles } from 'lucide-react';
 import React from "react";
+import { CircleLoader } from "react-spinners";
+import FAQPopup from "../faq";
 
 export const CallToAction = ({ handleGoogleAuth }: { handleGoogleAuth: () => void }) => {
+  const [loading, setLoading] = React.useState(false);
+  const submitButton = () => {
+    setLoading(true);
+    try{
+      handleGoogleAuth();
+    }
+    catch(e){
+      setLoading(false);
+    }finally{
+      setLoading(false);
+    }
+  }
   return (
     <div className="relative min-h-[80vh] flex items-center justify-center overflow-hidden px-4 py-20">
       {/* Animated background gradient */}
@@ -231,33 +245,34 @@ export const CallToAction = ({ handleGoogleAuth }: { handleGoogleAuth: () => voi
         {/* CTA button group */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <button
-            onClick={handleGoogleAuth}
+            onClick={submitButton}
             className="group relative px-8 py-4 bg-white hover:bg-opacity-95 text-gray-900 
                      rounded-full text-lg font-semibold transition-all duration-300
                      hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-[0.98]
                      active:scale-95 overflow-hidden"
           >
+          
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-purple-500/0 
                           opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur" />
-            <span className="relative flex items-center justify-center gap-2">
-              Get Started
-              <Sparkles className="w-5 h-5 text-blue-600 animate-pulse" />
+            <span className="relative flex items-center justify-center gap-2 ">
+              {loading? "Getting Ready For You": "Get Started"}
+              <Sparkles className={`w-5 h-5 text-blue-600 animate-pulse  ${loading?"duration-100":""}`} />
             </span>
           </button>
-          
-          {/* <a href="#learn-more" className="text-white/80 hover:text-white font-medium 
+          <div className="text-white/80 hover:text-white font-medium 
                                          transition-colors duration-300 flex items-center gap-2">
-            Learn more
-            <span className="text-lg">→</span>
-          </a> */}
+            <FAQPopup/>
+           
+          </div>
+          
         </div>
 
         {/* Optional: Decorative elements */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex gap-1 mb-8">
+        {/* <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex gap-1 mb-8">
           <div className="w-1 h-1 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: '0s' }} />
           <div className="w-1 h-1 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: '0.2s' }} />
           <div className="w-1 h-1 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: '0.4s' }} />
-        </div>
+        </div> */}
       </div>
     </div>
   );

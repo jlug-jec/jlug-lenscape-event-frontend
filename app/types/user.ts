@@ -12,3 +12,8 @@ export interface UserData {
 
     };
 }
+export interface TeamMember {
+  _id: string;
+  name: string;
+  picture: string;
+}

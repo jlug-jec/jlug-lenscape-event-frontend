@@ -1,3 +1,4 @@
+import { Footer } from '@/components/footer';
 import { Suspense } from 'react';
 
 export const metadata = {
@@ -15,6 +16,7 @@ export default function RootLayout({
       <body>
       <Suspense fallback={<div>Loading...</div>}>
         {children}
+        <Footer/>
         </Suspense>
         </body>
     

@@ -16,7 +16,9 @@ import "../../app/globals.css";
 import { useSearchParams } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import local from 'next/font/local';
-
+import { exchangeCodeForTokens, regenerateJwtToken } from '../api/checkServer';
+import { getUserDetails } from '../api/userApi';
+import { authenticatedFetch, AuthError } from '@/lib/auth.utils';
 interface TeamMember {
   name: string;
   email: string;
@@ -28,7 +30,6 @@ export default function OnboardingPage() {
   const router = useRouter();
   const { user,setUser,loadUser } = useUserStore();
   const searchParams = useSearchParams();
-  const invitedTeamId = searchParams.get('teamId');
   
   const [isInvited, setIsInvited] = useState(false);
   const [invitedTeamName, setInvitedTeamName] = useState('');
@@ -66,91 +67,123 @@ interface TeamMember {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [teamId, setTeamId] = useState(uuidv4());
   const [isDriveChecking,setIsDriveChecking]=useState(false);
-  let userId:string | null 
-  useEffect(() => {
-    const initializeUser = async () => {
-      const isOnboarded = localStorage.getItem('onboardedUser') === 'true';
-      const isParticipantStatus = localStorage.getItem('isParticipant') === 'true';
+  const onboarded=searchParams.get("onboarded")
+  const [isParticipantStatus, setIsParticipantStatus] = useState(false);
+  const invitedTeamId = searchParams.get('teamId');
+  let jwtToken:string | null
+  let incomingUserData:any
+  let refreshToken:string | undefined |null
+  const handleAuth = async () => {
+    try {
   
-
-      // Handle redirects first
-      if (isOnboarded && isParticipantStatus) {
-        router.push('/profile');
+      // Fetch team details if invitedTeamId is present
+      if (invitedTeamId) await fetchTeamDetails(invitedTeamId.trim().replace(/"/g, ''));
+  
+      // Exchange code for tokens
+      const exchangeResult = await exchangeCodeForTokens();
+  
+      // If token exchange was successful, set the user
+      if (exchangeResult?.user?.user) {
+        setUser(exchangeResult.user.user);
         return;
       }
-
-      let userId = searchParams.get('userId');
-      
-      if (!userId) {
-        const loadedUser = loadUser(); // Now returns User | null
-        
-        if (loadedUser && loadedUser.userId) {
-          userId = loadedUser.userId;
-        } else {
-          router.push('/');
-          return
-        }
-      }
-
-      if (userId) {
-        await fetchUserDetails(userId);
-      }
-    };
-
-    initializeUser();
-  }, []);
-  const fetchUserDetails = async (userId:string) => {
-     // Set loading state
-    try {
-      const response = await fetch(`${API_URL}/api/participant/users/${userId}`);
-      if (response.ok) {
-        const result = await response.json();
-        const { email, name, picture, isOnboarded, isParticipant } = result;
   
-        // Update user state
-        setUser({ name, picture, userId, email });
-        setTeamMembers([{ name, email, branch: '', collegeName: '', userId }]);
-  
-        // Redirect if the user is onboarded and a participant
-        if (isOnboarded && isParticipant) {
-          router.push('/profile');
+      // Handle failure of token exchange (status not 200)
+      if (exchangeResult?.response !== 200) {
+        const storedId = localStorage.getItem('_id')?.trim().replace(/"/g, '');
+        if (!storedId) {
+          toast.error("Session expired. Please login again.");
+          router.push('/?error=session_expired');
           return;
-        }
+        } 
+
+
   
-        // If invited to a team, fetch team details
-        if (invitedTeamId) {
-          const teamResponse = await fetch(`${API_URL}/api/participant/team/${invitedTeamId}`);
-          if (teamResponse.ok) {
-            const teamResult = await teamResponse.json();
-            setIsInvited(true);
-            setInvitedTeamName(teamResult.teamName);
-            setTeamName(teamResult.teamName);
-            setTeamMembers(teamResult.teamMembers.map(({ member }: { member: TeamMember }) => ({
-              name: member.name,
-              email: member.email,
-              branch: member.branch || '',
-              collegeName: member.collegeName || '',
-              userId: member.userId || ''
-            })));
-            setTeamId(invitedTeamId);
+        // Get tokens from localStorage
+        const jwtToken = localStorage.getItem('jwtToken');
+        const refreshToken = localStorage.getItem('refreshToken');
+  
+        // Fetch user details using stored tokens
+        try {
+          const incomingUserData = await getUserDetails(storedId, jwtToken, refreshToken || undefined);
+  
+          if (incomingUserData) {
+            setUser(incomingUserData);
+            setTeamMembers([{ 
+              name: incomingUserData.name, 
+              email: incomingUserData.email, 
+              branch: '', 
+              collegeName: '', 
+              userId: incomingUserData._id 
+            }]);
+          } else {
+            toast.error("Unable to fetch user details. Please login again.");
+            router.push('/?error=auth_failed');
           }
+        } catch (userError) {
+          console.error('User details error:', userError);
+          toast.error("Session expired. Please login again.");
+          router.push('/?error=session_expired');
         }
-      } else if(response.status === 404){
-        localStorage.removeItem('onboardedUser');
-        localStorage.removeItem('isParticipant');
-        localStorage.removeItem('user');
-        toast.error("User not found, Please create your account");
-        router.push('/');
       }
     } catch (error) {
+      console.error('Auth error:', error);
       toast.error("An unexpected error occurred. Please try again.");
+      router.push('/?error=unknown');
     } finally {
-      setIsPageLoading(false); // Reset loading state
+      setIsPageLoading(false);
     }
   };
   
+  // Separate useEffect to watch user and redirect
+  useEffect(() => {
+    // Redirect if the user is a participant
+    if (user?.isParticipant) {
+      router.push("/profile");
+    }
+  }, [user]);
+  
+  // Initial effect to load tokens and handle authentication
+  useEffect(() => {
+    jwtToken = localStorage.getItem('jwtToken');
+    refreshToken = localStorage.getItem('refreshToken') || undefined;
+    handleAuth();
+  }, []);
+  
+
+  
+
+ 
+  const fetchTeamDetails = async (teamId: string) => {
+    try {
+      const response = await authenticatedFetch(
+        `${API_URL}/api/participant/team/${teamId}`
+      );
+  
+      if (response.ok) {
+        const teamResult = await response.json();
+        setIsInvited(true);
+        setInvitedTeamName(teamResult.teamName);
+        setTeamName(teamResult.teamName);
+        setTeamId(teamId);
+        toast.info(`You've been invited to join ${teamResult.teamName}.`);
+      }
+    } catch (error) {
+      if (error instanceof AuthError) {
+        toast.error("Session expired. Please log in again.");
+        router.push('/');
+      } else {
+        console.log('Team details error:', error);
+        // toast.error("An unexpected error occurred. Please try again.");
+      }
+    }
+  };
 
   const handleCheckboxChange = (checked: boolean) => {
+    if(!user?.isParticipant && user?.isOnboarded){
+      toast.info("You are already onboarded as a participant. Time to show your skills!",{autoClose: 2000});
+      return setIsParticipantStatus(true);
+    } 
     setIsParticipant(checked);
   };
 
@@ -181,46 +214,58 @@ interface TeamMember {
         toast.error("Branch and College Name are required.");
         return;
       }
-
-      if (!isParticipant) {
-        const voterData = {
-          id:user?.userId,
-          email: teamMembers[0].email,
-          branch,
-          collegeName,
-          isParticipant,
-        };
-        setIsLoading(true);
-        await handleSubmission(voterData);
-        setIsLoading(false);
+      else if(!isParticipant || isInvited) {
+        try {
+          setIsLoading(true);
+          let submittedData = {
+            id:user?._id,
+            email: user?.email,
+            branch,
+            collegeName,
+            isParticipant: isParticipant,
+            teamId: invitedTeamId??null
+          };
+  
+          if(!isParticipant) {
+            await handleSubmission(submittedData);
+            setIsLoading(false);
+          } else if (isInvited && invitedTeamId) {
+            await handleSubmission(submittedData);
+           
+          }
+        } catch (error) {
+          console.error("Submission error:", error);
+          toast.error("An unexpected error occurred. Please try again.");
+          
+        }finally {
+          setIsLoading(false);
+        }
       } 
-      else if(isInvited){
-        const inviteeData = {
-          id:user?.userId,
-          teamId: invitedTeamId,
-          email: user?.email,
-          branch,
-          collegeName,
-          isParticipant:true,
-        };
-        setIsLoading(true);
-        await handleSubmission(inviteeData);
-      }
       else {
         setCurrentStep(1);
       }
     } else {
+     
       if (!await validateSubmission()) {
         return;
       }
 
-
-
-
-        const memberIndex = teamMembers.findIndex(member => member.userId === user?.userId);
-        teamMembers[memberIndex].branch = branch;
-        teamMembers[memberIndex].collegeName = collegeName;
-       
+     if(teamName.trim() === ''){
+        toast.error("Team name is required.");
+        return;
+      }
+      const memberIndex = teamMembers.findIndex(member => member.userId === user?._id);
+      teamMembers[memberIndex].branch = branch;
+      teamMembers[memberIndex].collegeName = collegeName;
+      if (
+        (photographyLink && photographyLink === videographyLink) ||
+        (photographyLink && photographyLink === digitalArtLink) ||
+        (videographyLink && videographyLink === digitalArtLink)
+      ) {
+        toast.error("Links should be unique");
+        return;
+      }
+      
 
       const participantData = {
         teamId,
@@ -239,96 +284,58 @@ interface TeamMember {
   };
 
   const handleSubmission = async (data: any) => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const endpoint = isInvited 
         ? `${API_URL}/api/participant/join-team`
-        :  `${API_URL}/api/participant/onboarding`;
-      
-      const response = await fetch(endpoint, {
+        : `${API_URL}/api/participant/onboarding`;
+  
+      const response = await authenticatedFetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-
+  
       if (response.ok) {
         const result = await response.json();
-        if(result) localStorage.setItem('onboardedUser', JSON.stringify(true));
         toast.success("Submission successful!");
-        if(data.isParticipant==false){
-          localStorage.setItem('isParticipant', JSON.stringify(false));
-          router.push('/countdown');
-         
+        router.push(result.teamId ? '/profile' : '/countdown');
+      }  
+      if(response.status === 400){
+        const message=await response.json();
+        toast.error(message.message);
+        toast.warn("Google drive links should be in this format https://drive.google.com/file/d/{file_id}/view?usp=sharing");
+        throw new Error('Invalid image video format or link is inaccessible');
+      }
+      if(response.status===420){
+        const message=await response.json();
+        toast.error(message.message);
+        return
+      }
+      if (!response.ok) {
 
-        }
-        else{
-          localStorage.setItem('isParticipant', JSON.stringify(true));
-          router.push('/profile');
-        }
-       
+        toast.error('Failed to edit post, Invalid image video format or link is inaccessible');
+        throw new Error('Invalid image video format or link is inaccessible');
+      }
+      
+      else if (response.status === 403) {
+        toast.error("You are not invited to join this team.");
       } else {
-        if(response.status === 403){
-          toast.error("You are not invited to join this team.");
-        }
-        else{
-          toast.error("Failed to submit. Please try again.");
-        }
        
       }
     } catch (error) {
-      console.error("Submission error:", error);
-      toast.error("An unexpected error occurred. Please try again.");
-    }finally{
+      if (error instanceof AuthError) {
+        toast.error("Session expired. Please log in again.");
+        router.push('/');
+      } else {
+        
+      }
+    } finally {
       setIsLoading(false);
     }
   };
-
-//   async function checkFileAccessibility(url:string,title:string) {
-//     try {
-//         setIsDriveChecking(true);
-//         const response = await fetch('http://localhost:8000/api/posts/isPublicDrive', {
-//             method: 'POST',
-//             headers: {
-//                 'Content-Type': 'application/json',
-//             },
-//             body: JSON.stringify({ url }),
-//         });
-
-//         const result = await response.json();
   
-//         if (response.ok) {
-//             if (!result.isPublic) {
-//                 toast.error(`The file at ${url} is not public (Content Type: ${result.contentType}).`);
-//                 return false; // Not public
-//             } 
-//             else {
-//               console.log(2)
-//                 if(title=='photographyTitle'){
-//                    setPhotoType(result.type);
-//                 }
-//                 else if(title=='videographyTitle'){
-//                    setVideoType(result.type);
-//                 }
-//                 else if(title=='digitalArtTitle'){
-//                    setDigitalArtType(result.type);
-//                 }
-//                 toast.success(`The file at ${url} is public.`);
-//                 return true; // Public
-//             }
-//         } else {
-
-//             toast.error(`The file at ${url} is not accessible (status code: ${result.statusCode}).`);
-//             return false; // Not accessible
-//         }
-//     } catch (error) {
-//         console.error(`Error checking URL: ${url}`);
-//         toast.error(`Error checking URL: ${url}`);
-//         return false; // Error in checking
-//     }
-//     finally{
-//       setIsDriveChecking(false);
-//     }
-// }
+  
+  
 
   const validateSubmission = async () => {
     const memberEmails = teamMembers.map(member => member.email.toLowerCase());
@@ -349,42 +356,6 @@ interface TeamMember {
         return false;
     }
 
-    const isValidGoogleDriveLink = (link:string) => link.includes('drive.google.com');
-
-    // Validate each link format
-    
-    if (photographyLink && !isValidGoogleDriveLink(photographyLink)) {
-        toast.error("Photography link must be a valid Google Drive link.");
-        return false;
-    }
-
-    if (videographyLink && !isValidGoogleDriveLink(videographyLink)) {
-        toast.error("Videography link must be a valid Google Drive link.");
-        return false;
-    }
-
-    if (digitalArtLink && !isValidGoogleDriveLink(digitalArtLink)) {
-        toast.error("Digital Art link must be a valid Google Drive link.");
-        return false;
-    }
-
-    // Check accessibility of valid links
-    // const linksToCheck = [
-    //     { link: photographyLink, title: photographyTitle },
-    //     { link: videographyLink, title: videographyTitle },
-    //     { link: digitalArtLink, title: digitalArtTitle },
-    // ];
-
-    // for (const { link, title } of linksToCheck) {
-    //     if (link && title) {
-    //         const isPublic = await checkFileAccessibility(link, title);
-    //         if (!isPublic) {
-    //             toast.error(`The link for ${title} is not public or accessible.`);
-    //             return false; // If any link is not public, validation fails
-    //         }
-    //     }
-    // }
-
     return true; // All validations passed
 };
 
@@ -401,7 +372,7 @@ interface TeamMember {
       <Card className="backdrop-blur-md bg-gray-800/50 shadow-xl border-0">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold text-white flex items-center justify-center">
-            <FaCamera className="mr-2" /> Lenscape
+            <FaCamera className="mr-2 animate-pulse" /> Lenscape
           </CardTitle>
           <CardDescription className="text-xl font-semibold text-gray-300 mt-4">
             {isInvited 
@@ -489,23 +460,15 @@ interface TeamMember {
               )}
               <div className='mt-4 mb-4 gap-3'>
                 <Label className="text-white mt-4">Team Leader</Label>
-                <select
-                  value={teamLeaderIndex}
-                  onChange={(e) => setTeamLeaderIndex(Number(e.target.value))}
-                  className="bg-gray-700 ml-5 text-white border-gray-600 mt-2 rounded-md"
-                  disabled={true}
-                >
-                  <option value={0}>{teamMembers[0]?.name.trim()}</option>
-                  {/* {teamMembers.map((_, index) => (
-                    <option key={index} value={index}>{teamMembers[0]?.name.trim()}</option>
-                  ))} */}
-                </select>
+                <p 
+                  className=" bg-gradient-to-br from-gray-700 to-slate-900  animate-pulse duration-0 cursor-not-allowed  p-3 text-white border-gray-600 mt-2 rounded-md"
+                  onClick={()=>toast.info("Team leader is automatically set to the first member")}>{teamMembers[0]?.name.trim()}</p>
               </div>
               <Label className="text-white mt-4">Photography</Label>
               <Input
                 value={photographyLink}
                 onChange={(e) => setPhotographyLink(e.target.value)}
-                placeholder="Photography Link"
+                placeholder="Photography Google Drive Link or Youtube Link"
                 className="bg-gray-700 text-white border-gray-600 mt-2"
               />
               <Input
@@ -518,7 +481,7 @@ interface TeamMember {
               <Input
                 value={videographyLink}
                 onChange={(e) => setVideographyLink(e.target.value)}
-                placeholder="Videography Link"
+                placeholder="Videography  Google Drive Link or Youtube Link"
                 className="bg-gray-700 text-white border-gray-600 mt-2"
               />
               <Input
@@ -531,7 +494,7 @@ interface TeamMember {
               <Input
                 value={digitalArtLink}
                 onChange={(e) => setDigitalArtLink(e.target.value)}
-                placeholder="Digital Art Link"
+                placeholder="Digital Art Google Drive Link or Youtube Link"
                 className="bg-gray-700 text-white border-gray-600 mt-2"
               />
               <Input

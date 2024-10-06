@@ -11,69 +11,37 @@ import useUserStore from '@/store/useUserStore';
 import "react-toastify/dist/ReactToastify.css";
 import { Post } from '../app/types/post';
 import { BarLoader } from 'react-spinners';
+import { getUserDetails } from '@/app/api/userApi';
 
-export function EditPostDialog({ post, onPostUpdate }: { post: Post; onPostUpdate: (title: string, url: string,type:string) => void }) {
+export function EditPostDialog({ post, onPostUpdate,isTeamLeader }: { post: Post; onPostUpdate: (title: string, url: string,type:string) => void ,isTeamLeader:boolean}) {
   const [editedPost, setEditedPost] = useState(post);
   const [isLoading, setIsLoading] = useState(false);
-  const [userIsLeader, setUserIsLeader] = useState(); // New state to check if user is leader
   const { user, loadUser } = useUserStore();
-  const [userData, setUserData] = useState({});
 
+  let jwtToken:null|string=null;
+  let refreshToken:string|null
 
-
-  useEffect(() => {
-    loadUser();
-  }, [loadUser]);
-
-  useEffect(() => {
-    if (user) {
-      const fetchUserDetails = async () => {
-        try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/participant/users/${user.userId}`);
-          if (response.ok) {
-            const result = await response.json();
-        
-            setUserData(result);
-            setUserIsLeader(result.isTeamLeader);
-            setEditedPost((prevPost) => ({
-              ...prevPost,
-              teamId: result.team._id,
-              teamName: result.team.teamName,
-            }));
-          } else {
-            toast.error("Failed to fetch user details. Please try again.");
-          }
-        } catch (error) {
-          console.error("Error fetching user details:", error);
-          toast.error("An unexpected error occurred. Please try again.");
-        }
-      };
-      fetchUserDetails();
-    }
-  }, [user]);
 
   const handleSave = async () => {
-    if (!userIsLeader) {
+    if (isTeamLeader) {
       toast.error("Only team leaders can edit posts.");
       return;
     }
     setIsLoading(true);
     try {
-      const isValidGoogleDriveLink = (link:string) => link.includes('drive.google.com');
-      if(!isValidGoogleDriveLink(editedPost.url)){
-        toast.error("Please provide a valid Google Drive link");
-        return
-      }
-      const updatedPost = await postApi.editPost(post._id, editedPost);
+      
+      const updatedPost = await postApi.editPost(post._id, editedPost,jwtToken,refreshToken);
       
       if(updatedPost){
-        onPostUpdate(editedPost.title,editedPost.url,editedPost.type);
+        console.log(updatedPost)
+        onPostUpdate(updatedPost.post.title,updatedPost.post.url,updatedPost.type);
         toast.success(updatedPost.message);
+        toast.info("Post updated successfully, refresh the page to see changes");
       }
       
     } catch (error) {
-      console.error('Error updating post:', error);
-      toast.error('Failed to update post');
+      setEditedPost(post)
+     
     } finally {
       setIsLoading(false);
     }
@@ -86,6 +54,7 @@ export function EditPostDialog({ post, onPostUpdate }: { post: Post; onPostUpdat
     )
   
 }
+
   return (
     <Dialog>
     
@@ -122,7 +91,7 @@ export function EditPostDialog({ post, onPostUpdate }: { post: Post; onPostUpdat
             <select
               id="type"
               value={editedPost.type}
-              onChange={(e) => setEditedPost({ ...editedPost, type: e.target.value as "image" | "video" })}
+              onChange={(e) => setEditedPost({ ...editedPost, type: e.target.value })}
               className="col-span-3"
             >
               <option value="image">Image</option>
@@ -132,7 +101,7 @@ export function EditPostDialog({ post, onPostUpdate }: { post: Post; onPostUpdat
         </div>
         <DialogClose>
           {isLoading ? <BarLoader color="#ffffff" /> : 
-            <Button onClick={handleSave} disabled={isLoading || !userIsLeader}>
+            <Button onClick={handleSave} disabled={isLoading || isTeamLeader}>
             {isLoading ? 'Saving...' : 'Save'}
           </Button>}
       
@@ -143,48 +112,15 @@ export function EditPostDialog({ post, onPostUpdate }: { post: Post; onPostUpdat
   );
 }
 
-export function UploadDialog({ category, onPostUpdate }: { category: string; onPostUpdate: (title: string, url: string,type:string) => void }) {
-  const [newPost, setNewPost] = useState({ title: '', url: '', category, teamId:'', teamName:'', type: 'image' });
+export function UploadDialog({ category, onPostUpdate,isTeamLeader,teamName,teamId }: { category: string; onPostUpdate: (title: string, url: string,type:string) => void,isTeamLeader:boolean ,teamName:string,teamId:string}) {
+  const [newPost, setNewPost] = useState({ title: '', url: '', category, teamId, teamName, type: 'image' });
   const [isLoading, setIsLoading] = useState(false);
-  const [userIsLeader, setUserIsLeader] = useState(false); // New state to check if user is leader
-  const { user, loadUser } = useUserStore();
+  let jwtToken:null|string=null;
+  let refreshToken:string|null
 
-
-  useEffect(() => {
-    loadUser();
-  }, [loadUser]);
-
-  useEffect(() => {
-    if (user) {
-      const fetchUserDetails = async () => {
-        try {
-          // Fetch user details to check if they are a team leader
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/participant/users/${user.userId}`);
-          if (response.ok) {
-            const result = await response.json();
-            
-            // Use functional form to get the latest state
-            setNewPost((prevPost) => ({
-              ...prevPost,
-              teamId: result.team._id,
-              teamName: result.team.teamName,
-            }));
-            setUserIsLeader(result.isTeamLeader)
-          } else {
-            toast.error("Failed to fetch user details. Please try again.");
-          }
-        } catch (error) {
-          console.error("Error fetching user details:", error);
-          toast.error("An unexpected error occurred. Please try again.");
-        }
-      };
-      fetchUserDetails();
-    }
-  }, [user]);
-  
 
   const handleUpload = async () => {
-    if (!userIsLeader) {
+    if (isTeamLeader) {
     
       toast.error("Only team leaders can upload posts.");
       return;
@@ -200,12 +136,6 @@ export function UploadDialog({ category, onPostUpdate }: { category: string; onP
   
     try {
       setIsLoading(true);
-      const isValidGoogleDriveLink = (link:string) => link.includes('drive.google.com');
-      
-      if(!isValidGoogleDriveLink(newPost.url)){
-        toast.error("Please provide a valid Google Drive link");
-        return
-      }
       const createdPost = await postApi.createPost({
         ...newPost,
         _id: '',
@@ -214,16 +144,18 @@ export function UploadDialog({ category, onPostUpdate }: { category: string; onP
         domain: '',
         votes: [],
         category: category as "photography" | "videography" | "digital art",
-        type: newPost.type as "image" | "video"
-      });
+        type: newPost.type ,
+      },jwtToken,refreshToken);
       if(createdPost){
+        console.log(createdPost)
         onPostUpdate(newPost.title,newPost.url,newPost.type);
         toast.success(createdPost.message);
+        toast.info("Post updated successfully, refresh the page to see changes");
       }
     
     } catch (error) {
-      console.error('Error uploading post:', error);
-      toast.error('Failed to upload post');
+
+      setNewPost({ title: '', url: '', category, teamId, teamName, type: 'image' })
     } finally {
       setIsLoading(false);
     }
@@ -271,7 +203,7 @@ export function UploadDialog({ category, onPostUpdate }: { category: string; onP
             <select
               id="type"
               value={newPost.type}
-              onChange={(e) => setNewPost({ ...newPost, type: e.target.value as "image" | "video" })}
+              onChange={(e) => setNewPost({ ...newPost, type: e.target.value})}
               className="col-span-3"
             >
               <option value="image">Image</option>
@@ -280,7 +212,7 @@ export function UploadDialog({ category, onPostUpdate }: { category: string; onP
           </div>
         </div>
         <DialogClose>
-        <Button onClick={handleUpload} disabled={isLoading || !userIsLeader}>
+        <Button onClick={handleUpload} disabled={isLoading}>
           {isLoading ? 'Uploading...' : 'Upload'}
         </Button>
       </DialogClose>
