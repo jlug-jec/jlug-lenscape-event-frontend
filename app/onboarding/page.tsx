@@ -257,10 +257,15 @@ interface TeamMember {
       const memberIndex = teamMembers.findIndex(member => member.userId === user?._id);
       teamMembers[memberIndex].branch = branch;
       teamMembers[memberIndex].collegeName = collegeName;
-      if(photographyLink==videographyLink || photographyLink==digitalArtLink || videographyLink==digitalArtLink){
+      if (
+        (photographyLink && photographyLink === videographyLink) ||
+        (photographyLink && photographyLink === digitalArtLink) ||
+        (videographyLink && videographyLink === digitalArtLink)
+      ) {
         toast.error("Links should be unique");
         return;
       }
+      
 
       const participantData = {
         teamId,
