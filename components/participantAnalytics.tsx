@@ -15,7 +15,6 @@ const categories = ['photography', 'videography', 'digital art'] as const;
 function PostCard({ post, category,isTeamLeader ,teamName,teamId}: { post?: Post; category: string,isTeamLeader:boolean ,teamName:string,teamId:string}) {
   const [currentPost, setCurrentPost] = useState<Post | undefined>(post);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false); 
-  console.log(currentPost)
   const handlePostUpdate = (title: string, url: string,type:string) => {
       setCurrentPost((currentPost: Post | undefined) => {
           return {

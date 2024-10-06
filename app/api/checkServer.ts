@@ -94,7 +94,6 @@ export const regenerateJwtToken = async (refreshToken: string | undefined) => {
       }
       
       const data = await response.json();
-      console.log('Refreshed JWT token:', data);
       return data;
     } catch (error) {
         clearTokens();

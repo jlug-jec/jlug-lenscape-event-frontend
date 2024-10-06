@@ -108,7 +108,6 @@ const fetchUserPosts = async (teamId: string,jwtToken:string|null,refreshToken:s
       
       if (postsResponse.ok) {
         const fetchedPosts = await postsResponse.json();
-        console.log(fetchedPosts)
         localStorage.getItem('_id')==fetchedPosts.teamLeader?setIsTeamLeader(true):setIsTeamLeader(false);
         setUserPosts(fetchedPosts);
       } else {
@@ -148,7 +147,7 @@ const fetchUserPosts = async (teamId: string,jwtToken:string|null,refreshToken:s
     }
   };
 
-  console.log(userPosts)
+
 
 
   return (

@@ -4,7 +4,7 @@ import { Post } from '../types/post';
 import { m } from 'framer-motion';
 export const postApi = {
     createPost: async (postData:Post,refreshToken:string|undefined|null,jwtToken:string|undefined|null) => {
-      console.log(postData);
+
       const response = await fetch(`${API_URL}/api/posts/createPost`, {
         method: 'POST',
         headers: {
@@ -15,7 +15,7 @@ export const postApi = {
         },
         body: JSON.stringify(postData),
       });
-      console.log(response)
+
       if (response.status === 400) {
         const message=await response.json();
         toast.error(message.message);
@@ -44,7 +44,7 @@ export const postApi = {
         throw new Error('Invalid image video format or link is inaccessible');
       }
       if (!response.ok) {
-        console.log(response)
+
         toast.error('Failed to edit post, Invalid image video format or link is inaccessible');
         throw new Error('Invalid image video format or link is inaccessible');
       }

@@ -162,7 +162,6 @@ interface TeamMember {
   
       if (response.ok) {
         const teamResult = await response.json();
-        console.log('Team result:', teamResult);
         setIsInvited(true);
         setInvitedTeamName(teamResult.teamName);
         setTeamName(teamResult.teamName);
@@ -256,9 +255,6 @@ interface TeamMember {
         return;
       }
       const memberIndex = teamMembers.findIndex(member => member.userId === user?._id);
-      console.log(memberIndex)
-      console.log(teamMembers)
-      console.log(branch)
       teamMembers[memberIndex].branch = branch;
       teamMembers[memberIndex].collegeName = collegeName;
        
@@ -281,7 +277,6 @@ interface TeamMember {
 
   const handleSubmission = async (data: any) => {
     setIsLoading(true);
-    console.log(data)
     try {
       const endpoint = isInvited 
         ? `${API_URL}/api/participant/join-team`
