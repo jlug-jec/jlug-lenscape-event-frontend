@@ -29,15 +29,12 @@ export function EditPostDialog({ post, onPostUpdate,isTeamLeader }: { post: Post
     }
     setIsLoading(true);
     try {
-      const isValidGoogleDriveLink = (link:string) => link.includes('drive.google.com') || link.includes('youtube.com') || link.includes('youtu.be');
-      if(!isValidGoogleDriveLink(editedPost.url)){
-        toast.error("Please provide a valid Google Drive link");
-        return
-      }
+      
       const updatedPost = await postApi.editPost(post._id, editedPost,jwtToken,refreshToken);
       
       if(updatedPost){
-        onPostUpdate(editedPost.title,editedPost.url,editedPost.type);
+        console.log(updatedPost)
+        onPostUpdate(updatedPost.post.title,updatedPost.post.url,updatedPost.type);
         toast.success(updatedPost.message);
         toast.info("Post updated successfully, refresh the page to see changes");
       }
@@ -139,12 +136,6 @@ export function UploadDialog({ category, onPostUpdate,isTeamLeader,teamName,team
   
     try {
       setIsLoading(true);
-      const isValidGoogleDriveLink = (link:string) => link.includes('drive.google.com');
-      
-      if(!isValidGoogleDriveLink(newPost.url)){
-        toast.error("Please provide a valid Google Drive link");
-        return
-      }
       const createdPost = await postApi.createPost({
         ...newPost,
         _id: '',
@@ -156,6 +147,7 @@ export function UploadDialog({ category, onPostUpdate,isTeamLeader,teamName,team
         type: newPost.type ,
       },jwtToken,refreshToken);
       if(createdPost){
+        console.log(createdPost)
         onPostUpdate(newPost.title,newPost.url,newPost.type);
         toast.success(createdPost.message);
         toast.info("Post updated successfully, refresh the page to see changes");

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState} from "react";
+import { use, useEffect, useState} from "react";
 import Image from "next/legacy/image";
 import { ThumbsUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +15,9 @@ const categories = ['photography', 'videography', 'digital art'] as const;
 function PostCard({ post, category,isTeamLeader ,teamName,teamId}: { post?: Post; category: string,isTeamLeader:boolean ,teamName:string,teamId:string}) {
   const [currentPost, setCurrentPost] = useState<Post | undefined>(post);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false); 
+
+  useEffect(() => {
+  }, [currentPost]);
   const handlePostUpdate = (title: string, url: string,type:string) => {
       setCurrentPost((currentPost: Post | undefined) => {
           return {
@@ -39,7 +42,8 @@ function PostCard({ post, category,isTeamLeader ,teamName,teamId}: { post?: Post
               className="relative w-full pt-[56.25%] cursor-pointer" 
               onClick={() => setIsModalOpen(true)}
             >
-              {currentPost.type.startsWith("image") ? (
+              
+              {currentPost?.type?.startsWith("image") ? (
                 <Image
                   src={currentPost.url}
                   alt="Sample Image"
@@ -63,7 +67,7 @@ function PostCard({ post, category,isTeamLeader ,teamName,teamId}: { post?: Post
             </div>
             <p className="text-center text-md text-slate-300">{currentPost.title}</p>
             <p className="text-center text-md text-slate-300">{currentPost.votes?.length} likes</p>
-
+  
             <EditPostDialog
               post={currentPost}
               onPostUpdate={handlePostUpdate}

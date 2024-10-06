@@ -257,7 +257,10 @@ interface TeamMember {
       const memberIndex = teamMembers.findIndex(member => member.userId === user?._id);
       teamMembers[memberIndex].branch = branch;
       teamMembers[memberIndex].collegeName = collegeName;
-       
+      if(photographyLink==videographyLink || photographyLink==digitalArtLink || videographyLink==digitalArtLink){
+        toast.error("Links should be unique");
+        return;
+      }
 
       const participantData = {
         teamId,
@@ -291,18 +294,35 @@ interface TeamMember {
         const result = await response.json();
         toast.success("Submission successful!");
         router.push(result.teamId ? '/profile' : '/countdown');
-      } else if (response.status === 403) {
+      }  
+      if(response.status === 400){
+        const message=await response.json();
+        toast.error(message.message);
+        toast.warn("Google drive links should be in this format https://drive.google.com/file/d/{file_id}/view?usp=sharing");
+        throw new Error('Invalid image video format or link is inaccessible');
+      }
+      if(response.status===420){
+        const message=await response.json();
+        toast.error(message.message);
+        return
+      }
+      if (!response.ok) {
+
+        toast.error('Failed to edit post, Invalid image video format or link is inaccessible');
+        throw new Error('Invalid image video format or link is inaccessible');
+      }
+      
+      else if (response.status === 403) {
         toast.error("You are not invited to join this team.");
       } else {
-        toast.error("Failed to submit. Please try again.");
+       
       }
     } catch (error) {
       if (error instanceof AuthError) {
         toast.error("Session expired. Please log in again.");
         router.push('/');
       } else {
-        console.error("Submission error:", error);
-        toast.error("An unexpected error occurred. Please try again.");
+        
       }
     } finally {
       setIsLoading(false);
@@ -328,25 +348,6 @@ interface TeamMember {
 
     if ((photographyLink && !photographyTitle) || (videographyLink && !videographyTitle) || (digitalArtLink && !digitalArtTitle)) {
         toast.error("Each provided link must have a corresponding post title.");
-        return false;
-    }
-
-    const isValidGoogleDriveLink = (link:string) => link.includes('drive.google.com') || link.includes('youtube.com') || link.includes('youtu.be');
-
-    // Validate each link format
-    
-    if (photographyLink && !isValidGoogleDriveLink(photographyLink)) {
-        toast.error("Photography link must be a valid Google Drive link.");
-        return false;
-    }
-
-    if (videographyLink && !isValidGoogleDriveLink(videographyLink)) {
-        toast.error("Videography link must be a valid Google Drive or Youtube video link.");
-        return false;
-    }
-
-    if (digitalArtLink && !isValidGoogleDriveLink(digitalArtLink)) {
-        toast.error("Digital Art link must be a valid Google Drive or Youtube video link.");
         return false;
     }
 
