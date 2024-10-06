@@ -5,40 +5,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import useUserStore from "@/store/useUserStore";
 import { toast } from "react-toastify";
 import Image from "next/legacy/image";
+import { TeamMember } from "@/app/types/user";
 
-interface TeamMember {
-  _id: string;
-  name: string;
-  picture: string;
-}
+export default function TeamMembersAndInvitation({ teamMembers,pendingInvitations }: { teamMembers: TeamMember[],pendingInvitations: (string | null)[] }) {
 
-export default function TeamMembersAndInvitation({teamId}: {teamId: string}) {
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [pendingInvitations, setPendingInvitations] = useState<string[]>([]);
-
-  useEffect(() => {
-    const fetchTeamDetailsAndInvitations = async () => {
-      if (!teamId) return;
-
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/participant/invitations/${teamId}`);
-        if (response.ok) {
-          const data = await response.json();
-          setTeamMembers(data.teamMembers);
-          setPendingInvitations(data.invitations);
-        } else {
-          toast.error("Failed to fetch team details and invitations.");
-        }
-      } catch (error) {
-        console.error("Error fetching team details and invitations:", error);
-        toast.error("An unexpected error occurred while fetching data.");
-      }
-    };
-
-    if (teamId) {
-      fetchTeamDetailsAndInvitations();
-    }
-  }, [teamId]);
   const [isTooltipOpen, setIsTooltipOpen] = useState<string | null>(null)
 
   const truncateEmail = (email: string) => {
@@ -62,13 +32,13 @@ export default function TeamMembersAndInvitation({teamId}: {teamId: string}) {
             </div>
           ))}
           {/* Display Pending Invitations */}
-          {pendingInvitations.map((email, index) => (
+          {pendingInvitations.map((email, index) => ( 
             <TooltipProvider key={index}>
               <Tooltip open={isTooltipOpen === email} onOpenChange={(open) => setIsTooltipOpen(open ? email : null)}>
                 <TooltipTrigger asChild>
                   <div className="flex items-center space-x-2 bg-yellow-600 p-2 rounded-md cursor-pointer">
                     <span className="text-xs text-yellow-200">Pending:</span>
-                    <span className="text-sm text-white">{truncateEmail(email)}</span>
+                    <span className="text-sm text-white">{email && truncateEmail(email)}</span>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>

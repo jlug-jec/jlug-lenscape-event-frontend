@@ -1,3 +1,5 @@
+import { Footer } from "@/components/footer"
+
 export const metadata = {
   title: 'Lenscape 2024 countdown',
   description: 'Countdown timer for Lenscape 2024 launch',
@@ -10,7 +12,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>{children}
+      <Footer/>
+      </body>
     </html>
   )
 }

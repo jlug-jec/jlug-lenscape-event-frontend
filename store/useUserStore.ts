@@ -1,14 +1,18 @@
 import {create} from 'zustand';
 
 export interface User {
-  userId: string | null ; // Assuming user has an ID
+  _id: string | null ;
   name: string;
   picture: string;
   email:string
-  instagramId?: string; // Optional field
-  branch?: string; // Optional field
-  isParticipant?: boolean; // Optional field
-  domains?: Domain[]; // Optional field, where Domain is another interface
+  instagramId?: string; 
+  branch?: string; 
+  collegeName?: string;
+  isParticipant?: boolean;
+  isOnboarded?: boolean;
+  isTeamLeader?: boolean; 
+  domains?: Domain[]; 
+  
 }
 
 interface Domain {
@@ -26,8 +30,8 @@ interface UserStore {
 const useStore = create<UserStore>((set) => ({
   user: null,
   setUser: (user) => {
+    localStorage.setItem('_id', JSON.stringify(user._id));
     set({ user });
-    localStorage.setItem('user', JSON.stringify(user));
   },
   loadUser: () => {
     try {

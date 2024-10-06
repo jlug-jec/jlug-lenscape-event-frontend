@@ -6,6 +6,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import "../../app/globals.css";
+import { getUserDetails } from "../api/userApi"
+import useUserStore from "@/store/useUserStore"
+
 const targetDate = new Date('2024-10-13T00:00:00')
 
 function getTimeLeft() {
@@ -27,24 +30,47 @@ export default function ResponsiveCountdown() {
   const [timeLeft, setTimeLeft] = useState(getTimeLeft())
   const [isOnboarded, setIsOnboarded] = useState(false)
   const [isParticipated, setIsParticipated] = useState(false)
-
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const { user } = useUserStore();
+  let jwtToken : string | null = '';
+  let refreshToken : string | undefined = '';
   useEffect(() => {
-    const onboardedUser = localStorage.getItem('onboardedUser') === 'true'
-    const participantStatus = localStorage.getItem('isParticipant') === 'true'
-
-    setIsOnboarded(onboardedUser)
-    setIsParticipated(participantStatus)
-
-    if (!onboardedUser) {
-      window.location.href = "/"
-    }
-
     const timer = setInterval(() => {
       setTimeLeft(getTimeLeft())
     }, 1000)
 
     return () => clearInterval(timer)
   }, [])
+
+  const countDown = async () => {
+    try { 
+
+       if(!localStorage.getItem('_id')) router.push('/');
+      
+      else if(localStorage.getItem('_id')) {
+        let incomingUserData=await getUserDetails(localStorage.getItem('_id')?.trim().replace(/"/g, ''),jwtToken,refreshToken);
+        if(incomingUserData){
+          setIsOnboarded(incomingUserData.isOnboarded);
+          setIsParticipated(incomingUserData.isParticipant);
+      }
+    }
+  }
+     catch (error) {
+    } finally {
+      setIsPageLoading(false);
+    }
+  };
+
+  useEffect(() => {
+     jwtToken = localStorage.getItem('jwtToken');
+     refreshToken = localStorage.getItem('refreshToken') || undefined; 
+     countDown();
+  }, []);
+
+  useEffect(() => {
+    
+  }, [user]);
+
 
   return (
     <BackgroundLines className="flex items-center justify-center w-full min-h-screen flex-col px-4 py-6 sm:py-10 bg-black">
