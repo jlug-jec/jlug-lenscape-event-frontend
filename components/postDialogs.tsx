@@ -33,7 +33,6 @@ export function EditPostDialog({ post, onPostUpdate,isTeamLeader }: { post: Post
       const updatedPost = await postApi.editPost(post._id, editedPost,jwtToken,refreshToken);
       
       if(updatedPost){
-        console.log(updatedPost)
         onPostUpdate(updatedPost.post.title,updatedPost.post.url,updatedPost.type);
         toast.success(updatedPost.message);
         toast.info("Post updated successfully, refresh the page to see changes");
@@ -147,7 +146,6 @@ export function UploadDialog({ category, onPostUpdate,isTeamLeader,teamName,team
         type: newPost.type ,
       },jwtToken,refreshToken);
       if(createdPost){
-        console.log(createdPost)
         onPostUpdate(newPost.title,newPost.url,newPost.type);
         toast.success(createdPost.message);
         toast.info("Post updated successfully, refresh the page to see changes");

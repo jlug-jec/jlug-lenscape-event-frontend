@@ -84,6 +84,7 @@ interface TeamMember {
   
       // If token exchange was successful, set the user
       if (exchangeResult?.user?.user) {
+        if(!exchangeResult?.user?.user?.isParticipant && exchangeResult?.user?.user?.isOnboarded && onboarded==null) router.push('/profile');
         setUser(exchangeResult.user.user);
         return;
       }

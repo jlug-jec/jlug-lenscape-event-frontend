@@ -28,7 +28,6 @@ function getTimeLeft() {
 export default function ResponsiveCountdown() {
   const router = useRouter()
   const [timeLeft, setTimeLeft] = useState(getTimeLeft())
-  const [isOnboarded, setIsOnboarded] = useState(false)
   const [isParticipated, setIsParticipated] = useState(false)
   const [isPageLoading, setIsPageLoading] = useState(true);
   const { user } = useUserStore();
@@ -44,13 +43,10 @@ export default function ResponsiveCountdown() {
 
   const countDown = async () => {
     try { 
-
-       if(!localStorage.getItem('_id')) router.push('/');
-      
-      else if(localStorage.getItem('_id')) {
+ 
+      if(localStorage.getItem('_id')) {
         let incomingUserData=await getUserDetails(localStorage.getItem('_id')?.trim().replace(/"/g, ''),jwtToken,refreshToken);
         if(incomingUserData){
-          setIsOnboarded(incomingUserData.isOnboarded);
           setIsParticipated(incomingUserData.isParticipant);
       }
     }
@@ -108,7 +104,7 @@ export default function ResponsiveCountdown() {
           Check your profile to upload posts!
         </Button>
       )}
-      {!isParticipated && isOnboarded && (
+      {!isParticipated && (
         <Button
           className="mt-4 sm:mt-6 lg:mt-8 bg-white/10 z-[999] text-neutral-100 transition-colors duration-300 cursor-pointer text-sm sm:text-base"
           size="lg"
@@ -117,6 +113,7 @@ export default function ResponsiveCountdown() {
           Want to participate? Click here!
         </Button>
       )}
+
     </BackgroundLines>
   )
 }
