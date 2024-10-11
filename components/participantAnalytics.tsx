@@ -10,7 +10,7 @@ import ImageModal from "./imageModel";
 import React from 'react'
 import ReactPlayer from 'react-player/lazy'
 
-const categories = ['photography', 'videography', 'digital art'] as const;
+const categories = ['photography', 'videography', 'digitalArt'] as const;
 
 function PostCard({ post, category,isTeamLeader ,teamName,teamId}: { post?: Post; category: string,isTeamLeader:boolean ,teamName:string,teamId:string}) {
   const [currentPost, setCurrentPost] = useState<Post | undefined>(post);
@@ -44,13 +44,14 @@ function PostCard({ post, category,isTeamLeader ,teamName,teamId}: { post?: Post
             >
               
               {currentPost?.type?.startsWith("image") ? (
-                <Image
-                  src={currentPost.url}
-                  alt="Sample Image"
-                  className="rounded-md absolute inset-0"
-                  layout="fill"
-                  objectFit="cover"
-                />
+               <Image
+               src={`https://drive.google.com/uc?export=view&id=${currentPost.url.split('/d/')[1].split('/')[0]}`}
+               alt="Sample Image"
+               className="rounded-md absolute inset-0"
+               layout="fill"
+               objectFit="cover"
+             />
+             
               ) : (
                 <div className="absolute inset-0">
                   <ReactPlayer
