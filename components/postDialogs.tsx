@@ -30,7 +30,7 @@ export function EditPostDialog({ post, onPostUpdate,isTeamLeader }: { post: Post
     setIsLoading(true);
     try {
       
-      const updatedPost = await postApi.editPost(post._id, editedPost,jwtToken,refreshToken);
+      const updatedPost = await postApi.editPost(post._id, editedPost);
       
       if(updatedPost){
         onPostUpdate(updatedPost.post.title,updatedPost.post.url,updatedPost.type);
@@ -144,7 +144,7 @@ export function UploadDialog({ category, onPostUpdate,isTeamLeader,teamName,team
         votes: [],
         category: category as "photography" | "videography" | "digital art",
         type: newPost.type ,
-      },jwtToken,refreshToken);
+      });
       if(createdPost){
         onPostUpdate(newPost.title,newPost.url,newPost.type);
         toast.success(createdPost.message);

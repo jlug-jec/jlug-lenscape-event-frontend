@@ -35,7 +35,7 @@ export default function OnboardingPage() {
   const [invitedTeamName, setInvitedTeamName] = useState('');
   const [branch, setBranch] = useState('');
   const [collegeName, setCollegeName] = useState('');
-  const [isParticipant, setIsParticipant] = useState(true);
+  const [isParticipant, setIsParticipant] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [teamName, setTeamName] = useState('');
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([ { name: '', email: '', branch: '', collegeName: '', userId: '' }] as any[]);
@@ -174,11 +174,11 @@ interface TeamMember {
   };
 
   const handleCheckboxChange = (checked: boolean) => {
-    if(!user?.isParticipant && user?.isOnboarded){
-      toast.info("You are already onboarded as a participant. Time to show your skills!",{autoClose: 2000});
-      return setIsParticipantStatus(true);
-    } 
-    setIsParticipant(checked);
+    // if(!user?.isParticipant && user?.isOnboarded){
+    //   toast.info("You are already onboarded as a participant. Time to show your skills!",{autoClose: 2000});
+    //   return setIsParticipantStatus(true);
+    // } 
+    // setIsParticipant(checked);
   };
 
   const handleAddMember = () => {
@@ -411,7 +411,7 @@ interface TeamMember {
                 className="bg-gray-700 text-white border-gray-600"
                 required
               />
-              {!isInvited && (
+              {/* {!isInvited && (
                 <div className="flex items-center mt-4">
                   <Checkbox
                     id="isParticipant"
@@ -421,7 +421,7 @@ interface TeamMember {
                   />
                   <Label htmlFor="isParticipant" className="ml-2  text-white border-slate-200">Are you a participant?</Label>
                 </div>
-              )}
+              )} */}
             </div>
           )}
           {currentStep === 1 && (
