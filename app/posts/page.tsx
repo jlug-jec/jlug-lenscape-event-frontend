@@ -13,6 +13,7 @@ import ReactPlayer from 'react-player'
 
 import "../../app/globals.css"
 import { toast } from 'react-toastify'
+import { useRouter } from 'next/navigation'
 
 interface Submission {
   _id: string
@@ -43,6 +44,7 @@ export default function LenscapeVoting() {
   const videoRef = useRef<ReactPlayer>(null)
   const childRefs = useRef<any[]>([])
   const [userId, setUserId] = useState<string | null>(null);
+  const router=useRouter()
   
   const fetchData = async () => {
     try {
@@ -57,6 +59,7 @@ export default function LenscapeVoting() {
   };
   
   useEffect(() => {
+    router.push("/countdown")
     fetchData();
     // Safely get userId from localStorage
     const storedUserId = getLocalStorageItem('_id');

@@ -1,5 +1,7 @@
 import Image from "next/legacy/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useRouter } from "next/navigation"
+
 
 interface LikedPost {
   id: string;
@@ -14,14 +16,17 @@ interface LikedPost {
 // ]
 
 export default function LikedPosts() {
+  const router=useRouter()
   return (
     <Card className="bg-gray-800 border-gray-700">
       <CardHeader>
         <CardTitle className="text-xl font-semibold text-neutral-400">Liked Posts</CardTitle>
       </CardHeader>
       <CardContent>
+     
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-white">
             <p className="text-white">Liked posts will be available after voting has started</p>
+
           {/* {likedPosts.map((post) => (
             <div key={post.id} className="bg-gray-700 rounded-md overflow-hidden">
               <Image
@@ -38,7 +43,12 @@ export default function LikedPosts() {
             </div>
           ))} */}
         </div>
+        <button 
+        className="mt-5 rounded-sm  bg-gradient-to-t text-white from:bg-gray-300 to:bg-gray-100 border-gray-700 p-2"
+        onClick={()=>{router.push("/countdown")}}>
+          Lets go Voting</button>
       </CardContent>
+    
     </Card>
   )
 }
