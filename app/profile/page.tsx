@@ -164,7 +164,8 @@ const fetchUserPosts = async (teamId: string,jwtToken:string|null,refreshToken:s
           {/* Posts and Liked Posts Section */}
           <div className="md:w-2/3 space-y-8">
             {role==="User"? (
-              <LockedPosts />
+              ""
+              // <LockedPosts />
             ) : (
               <>
                 {userData?.team?._id && <TeamMembersAndInvitations teamMembers={teamMembers} pendingInvitations={pendingInvitations} />}
@@ -172,6 +173,7 @@ const fetchUserPosts = async (teamId: string,jwtToken:string|null,refreshToken:s
               </>
             )}
             <LikedPosts />
+            
             <ToastContainer />
           </div>
          

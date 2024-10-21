@@ -9,7 +9,7 @@ import "../../app/globals.css";
 import { getUserDetails } from "../api/userApi"
 import useUserStore from "@/store/useUserStore"
 
-const targetDate = new Date('2024-10-13T00:00:00')
+const targetDate = new Date('2024-10-23T00:00:00')
 
 function getTimeLeft() {
   const difference = +targetDate - +new Date()
