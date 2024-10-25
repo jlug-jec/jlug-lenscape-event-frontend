@@ -105,6 +105,7 @@ export default function LenscapeVoting() {
     if(!userId){
       toast.error("You havent logged In, log in to continue")
       router.push("/")
+      return
     }
     if(direction === 'right' && userId) {
       try {
@@ -112,6 +113,7 @@ export default function LenscapeVoting() {
         toast.success(response.message);
       } catch (error) {
         toast.error("Failed to vote post");
+        router.push("/")
       }
     }
     setLastDirection(direction)
