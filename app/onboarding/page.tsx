@@ -303,7 +303,7 @@ interface TeamMember {
       if (response.ok) {
         const result = await response.json();
         toast.success("Submission successful!");
-        router.push(result.teamId ? '/profile' : '/countdown');
+        router.push(result.teamId ? '/profile' : '/posts');
       }  
       if(response.status === 400){
         const message=await response.json();
@@ -420,7 +420,7 @@ interface TeamMember {
                     onCheckedChange={(value) => handleCheckboxChange(!!value)}
                     className='outline border-gray-600'
                   />
-                  <Label htmlFor="isParticipant" className="ml-2  text-white border-slate-200">Are you a participant?</Label>
+                  <Label htmlFor="isParticipant" className="ml-2  text-white border-slate-200">Are you a participant? </Label>
                 </div>
               )}
             </div>

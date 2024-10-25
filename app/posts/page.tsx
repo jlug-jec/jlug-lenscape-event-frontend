@@ -102,6 +102,10 @@ export default function LenscapeVoting() {
   const canSwipe = currentIndex >= 0
 
   const swiped = async (direction: string, nameToDelete: string, index: number) => {
+    if(!userId){
+      toast.error("You havent logged In, log in to continue")
+      router.push("/")
+    }
     if(direction === 'right' && userId) {
       try {
         let response = await postApi.votePost(submissions[index]._id, userId);
@@ -150,6 +154,10 @@ export default function LenscapeVoting() {
       } catch (error) {
         toast.error("Failed to remove vote");
       }
+    }
+    else{
+      toast.error("You havent logged in, log in to start voting")
+      router.push("/")
     }
   };
 
