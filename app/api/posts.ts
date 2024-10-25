@@ -1,9 +1,7 @@
 import { toast } from 'react-toastify';
 import { Post } from '../types/post';
 import { authenticatedFetch } from '@/lib/auth.utils';
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-
 // Safe localStorage access
 const getLocalStorageItem = (key: string): string | null => {
   if (typeof window !== 'undefined') {
