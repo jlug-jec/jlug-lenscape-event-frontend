@@ -58,6 +58,7 @@ export default function ResponsiveCountdown() {
   };
 
   useEffect(() => {
+     router.push("/posts")
      jwtToken = localStorage.getItem('jwtToken');
      refreshToken = localStorage.getItem('refreshToken') || undefined; 
      countDown();
