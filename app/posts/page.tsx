@@ -1,19 +1,18 @@
 "use client"
-
 import { useState, useRef, useEffect } from 'react'
 import TinderCard from 'react-tinder-card'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight, RotateCcw, Heart } from "lucide-react"
+import { ChevronLeft, ChevronRight, RotateCcw, Heart, ThumbsDown, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { postApi } from "@/app/api/posts"
 import React from 'react'
 import Image from 'next/image'
 import ReactPlayer from 'react-player'
-
-import "../../app/globals.css"
-import { toast } from 'react-toastify'
+import { toast, ToastContainer } from 'react-toastify'
 import { useRouter } from 'next/navigation'
+import 'react-toastify/dist/ReactToastify.css'
+import "../../app/globals.css"
 
 interface Submission {
   _id: string
@@ -25,12 +24,23 @@ interface Submission {
   votes: string[]
 }
 
-// Safe localStorage access
 const getLocalStorageItem = (key: string): string | null => {
   if (typeof window !== 'undefined') {
     return localStorage.getItem(key);
   }
   return null;
+};
+
+// Helper function to extract and format Drive URL
+const getOptimizedDriveUrl = (url: string): string => {
+  try {
+    const fileId = url.split('/d/')[1]?.split('/')[0];
+    if (!fileId) throw new Error('Invalid Drive URL');
+    // Use the direct download URL format which is typically faster
+    return `https://drive.google.com/uc?export=download&id=${fileId}`;
+  } catch {
+    return url;
+  }
 };
 
 export default function LenscapeVoting() {
@@ -40,34 +50,48 @@ export default function LenscapeVoting() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [playingVideoIndex, setPlayingVideoIndex] = useState<number | null>(null)
   const [likedIndex, setLikedIndex] = useState<number | null>(null)
+  const [imageLoadingStates, setImageLoadingStates] = useState<{[key: string]: boolean}>({})
   const currentIndexRef = useRef(currentIndex)
   const videoRef = useRef<ReactPlayer>(null)
   const childRefs = useRef<any[]>([])
-  const [userId, setUserId] = useState<string | null>(null);
-  const router=useRouter()
-  
+  const [userId, setUserId] = useState<string | null>(null)
+  const router = useRouter()
+
   const fetchData = async () => {
     try {
       let response = await postApi.getAllPosts();
       setSubmissions(response);
       setCurrentIndex(response.length - 1);
-      childRefs.current = response.map(() => React.createRef())
-      console.log(response);
+      childRefs.current = response.map(() => React.createRef());
+      
+      // Initialize loading states for all images
+      const initialLoadingStates: {[key: string]: boolean} = {};
+      response.forEach((submission: { type: string; _id: string | number }) => {
+        if (submission.type.startsWith("image")) {
+          initialLoadingStates[submission._id] = true;
+        }
+      });
+      setImageLoadingStates(initialLoadingStates);
     } catch (error) {
       console.error("Error fetching data:", error);
+      toast.error("Failed to load submissions");
     }
   };
-  
+
   useEffect(() => {
-    router.push("/countdown")
     fetchData();
-    // Safely get userId from localStorage
     const storedUserId = getLocalStorageItem('_id');
     if (storedUserId) {
-      // Remove quotes if present
       setUserId(storedUserId.replace(/^"|"$/g, ''));
     }
   }, []);
+
+  const handleImageLoad = (submissionId: string) => {
+    setImageLoadingStates(prev => ({
+      ...prev,
+      [submissionId]: false
+    }));
+  };
 
   const updateCurrentIndex = (val: number) => {
     setCurrentIndex(val)
@@ -78,17 +102,14 @@ export default function LenscapeVoting() {
   const canSwipe = currentIndex >= 0
 
   const swiped = async (direction: string, nameToDelete: string, index: number) => {
-    if(direction === 'right' && userId){
-      console.log("right clicked")
+    if(direction === 'right' && userId) {
       try {
         let response = await postApi.votePost(submissions[index]._id, userId);
-        console.log(response.message)
         toast.success(response.message);
       } catch (error) {
         toast.error("Failed to vote post");
       }
     }
-    console.log(`swiped ${direction} on ${nameToDelete}`)
     setLastDirection(direction)
     updateCurrentIndex(index - 1)
     if (playingVideoIndex === index) {
@@ -97,7 +118,7 @@ export default function LenscapeVoting() {
     }
     if (direction === 'right') {
       setLikedIndex(index)
-      setTimeout(() => setLikedIndex(null), 800) // Reset after animation
+      setTimeout(() => setLikedIndex(null), 800)
     }
   }
 
@@ -108,30 +129,32 @@ export default function LenscapeVoting() {
   }
 
   const swipe = async (dir: string) => {
-    console.log(`Swiped ${dir}`)
     if (canSwipe && currentIndex < submissions.length) {
       await childRefs.current[currentIndex].current.swipe(dir)
     }
   }
 
-  const goBack = async () => {
-    if (!canGoBack) return
-    const newIndex = currentIndex + 1
-    updateCurrentIndex(newIndex)
-    await childRefs.current[newIndex].current.restoreCard()
-  }
-
-  const togglePlay = (index: number) => {
-    if (playingVideoIndex === index) {
-      setIsPlaying(!isPlaying)
-    } else {
-      setIsPlaying(true)
-      setPlayingVideoIndex(index)
+  const handleDislike = async (index: number) => {
+    if (userId) {
+      try {
+        let response = await postApi.downvotePost(submissions[index]._id, userId);
+        toast.success(response.message);
+        setSubmissions((prevSubmissions) => {
+          const newSubmissions = [...prevSubmissions];
+          newSubmissions[index] = {
+            ...newSubmissions[index],
+            votes: newSubmissions[index].votes.filter(vote => vote !== userId)
+          };
+          return newSubmissions;
+        });
+      } catch (error) {
+        toast.error("Failed to remove vote");
+      }
     }
-  }
+  };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-black p-4">
+    <div className="flex flex-col items-center justify-center min-h-screen z-0 bg-gradient-to-br from-gray-900 to-black p-4">
       <h1 className="text-5xl font-bold mb-8 text-white tracking-wider">LENSCAPE</h1>
       <div className="relative w-full max-w-sm h-[600px]">
         <AnimatePresence>
@@ -159,14 +182,25 @@ export default function LenscapeVoting() {
                     <CardContent className="p-0 h-full flex flex-col">
                       <div className="relative flex-grow">
                         {submission.type.startsWith("image") ? (
-                          <Image
-                            src={`https://drive.google.com/uc?export=view&id=${submission.url.split('/d/')[1].split('/')[0]}`}
-                            alt={`Submission by ${submission.teamName}`}
-                            className="w-full h-full object-cover"
-                            draggable="false"
-                            width={500}
-                            height={500}
-                          />
+                          <>
+                            {imageLoadingStates[submission._id] && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+                                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                              </div>
+                            )}
+                            <Image
+                              src={getOptimizedDriveUrl(submission.url)}
+                              alt={`Submission by ${submission.teamName}`}
+                              className={`w-full h-full object-cover transition-opacity duration-300 ${
+                                imageLoadingStates[submission._id] ? 'opacity-0' : 'opacity-100'
+                              }`}
+                              draggable="false"
+                              width={500}
+                              height={500}
+                              onLoad={() => handleImageLoad(submission._id)}
+                              priority={index === currentIndex}
+                            />
+                          </>
                         ) : (
                           <div className="relative w-full h-full">
                             <ReactPlayer
@@ -182,13 +216,12 @@ export default function LenscapeVoting() {
                         )}
                         <div className="absolute bottom-4 right-4 bg-white flex rounded-full gap-2 p-2 transition-opacity hover:bg-opacity-75">
                           <Heart className={`h-6 w-6 text-red-500 ${userId && submission.votes.includes(userId) ? 'fill-red-500' : ''}`}/>
-                          <p className='text-red-600'>{submission.votes.length}</p>
+                          <p className="text-red-600">{submission.votes.length}</p>
                         </div>
-
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
                           <h2 className="text-2xl font-semibold text-white">{submission.title}</h2>
                           <p className="text-lg text-white">{submission.domain}</p>
-                          <p className='text-white'>@{submission.teamName}</p>
+                          <p className="text-white">@{submission.teamName}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -222,37 +255,40 @@ export default function LenscapeVoting() {
         </AnimatePresence>
       </div>
       <div className="flex justify-center mt-8 space-x-6">
+        {userId && submissions[currentIndex]?.votes.includes(userId) ? (
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => handleDislike(currentIndex)}
+            className="bg-transparent hover:bg-red-900 text-red-500 border-red-500 hover:border-red-600 transition-colors duration-200"
+          >
+            Dislike
+            <ThumbsDown className="h-6 w-6 ml-2 transform -scale-x-100" />
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => swipe('right')}
+            disabled={!canSwipe}
+            className="bg-transparent hover:bg-green-900 text-green-500 border-green-500 hover:border-green-600 transition-colors duration-200"
+          >
+            Like
+            <Heart className="h-6 w-6 ml-2" />
+          </Button>
+        )}
         <Button
           variant="outline"
           size="lg"
           onClick={() => swipe('left')}
           disabled={!canSwipe}
-          className="bg-transparent hover:bg-red-900 text-red-500 border-red-500 hover:border-red-600"
-        >
-          <ChevronLeft className="h-6 w-6 mr-2" />
-          Will Check Later
-        </Button>
-        <Button
-          variant="outline"
-          size="lg"
-          onClick={() => goBack()}
-          disabled={!canGoBack}
           className="bg-transparent hover:bg-blue-900 text-blue-500 border-blue-500 hover:border-blue-600"
         >
-          <RotateCcw className="h-6 w-6 mr-2" />
-          Undo
-        </Button>
-        <Button
-          variant="outline"
-          size="lg"
-          onClick={() => swipe('right')}
-          disabled={!canSwipe}
-          className="bg-transparent hover:bg-green-900 text-green-500 border-green-500 hover:border-green-600"
-        >
-          Like
+          Next
           <ChevronRight className="h-6 w-6 ml-2" />
         </Button>
       </div>
+      <ToastContainer/>
     </div>
   )
 }

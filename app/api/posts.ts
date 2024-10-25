@@ -74,7 +74,6 @@ export const postApi = {
 
     if (!response.ok) {
       toast.error('Failed to fetch posts');
-      console.log(response);
       throw new Error('Failed to fetch posts');
     }
 
@@ -82,7 +81,6 @@ export const postApi = {
   },
 
   votePost: async (postId: string, userId: string | null) => {
-    console.log(postId, userId);
     
     const jwtToken = getLocalStorageItem('jwtToken');
     const refreshToken = getLocalStorageItem('refreshToken');
@@ -93,6 +91,30 @@ export const postApi = {
     }
 
     const response = await authenticatedFetch(`${API_URL}/api/posts/vote/${postId}`, {
+      method: 'POST',
+      requireAuth: true,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${jwtToken}`,
+        'X-Refresh-Token': refreshToken || ''
+      },
+      body: JSON.stringify({ "userId": userId }),
+    });
+    
+    return response.json();
+  },
+  downvotePost: async (postId: string, userId: string | null) => {
+
+    
+    const jwtToken = getLocalStorageItem('jwtToken');
+    const refreshToken = getLocalStorageItem('refreshToken');
+    
+    if (!jwtToken || !refreshToken || !userId) {
+      toast.error('You need to login to vote');
+      throw new Error('Authentication required');
+    }
+
+    const response = await authenticatedFetch(`${API_URL}/api/posts/downvote/${postId}`, {
       method: 'POST',
       requireAuth: true,
       headers: {
