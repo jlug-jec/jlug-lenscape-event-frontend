@@ -80,7 +80,7 @@ export default function ResponsiveCountdown() {
       <Card className="bg-white/10 backdrop-blur-lg border-none shadow-lg w-full max-w-sm sm:max-w-md md:max-w-lg">
         <CardContent className="p-4 sm:p-6">
           <h3 className="text-xl sm:text-2xl font-bold text-center text-neutral-400 dark:text-neutral-200 mb-3 sm:mb-4">
-            Countdown to Launch
+           Thank You For participating in lenscape event. 
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
             {Object.entries(timeLeft).map(([unit, value]) => (
@@ -105,7 +105,8 @@ export default function ResponsiveCountdown() {
           Check your profile to upload posts!
         </Button>
       )}
-      {!isParticipated && (
+
+      {/* {!isParticipated && (
         <Button
           className="mt-4 sm:mt-6 lg:mt-8 bg-white/10 z-[999] text-neutral-100 transition-colors duration-300 cursor-pointer text-sm sm:text-base"
           size="lg"
@@ -113,7 +114,7 @@ export default function ResponsiveCountdown() {
         >
           Want to participate? Click here!
         </Button>
-      )}
+      )} */}
 
     </BackgroundLines>
   )
