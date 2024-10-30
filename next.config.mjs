@@ -16,8 +16,13 @@ const nextConfig = {
         permanent: true, // Use true for a permanent 308 redirect, false for a temporary 307 redirect
       },
       {
-        source: '/posts',
-        destination: '/countdown',
+        source: '/profile',
+        destination: '/leaderboard',
+        permanent: true, // Use true for a permanent 308 redirect, false for a temporary 307 redirect
+      },
+      {
+        source: '/onboarding',
+        destination: '/leaderboard',
         permanent: true, // Use true for a permanent 308 redirect, false for a temporary 307 redirect
       },
     ];
