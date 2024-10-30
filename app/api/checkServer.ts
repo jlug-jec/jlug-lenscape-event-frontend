@@ -1,4 +1,4 @@
-import router from "next/router";
+
 import { Dispatch, SetStateAction } from "react";
 import { setTokens,clearTokens } from "@/lib/utils";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
@@ -78,7 +78,8 @@ export const checkServerStatus = async (setIsLoading: Dispatch<SetStateAction<bo
         // Show an alert to inform the user to open in a real browser
         alert("Please open this link in your actual browser (e.g., Chrome, Safari) to continue and for a better experience");
     } else {
-      router.push(`/leaderboard`);
+      
+      window.location.href=`lenscape.jlug.club/leaderboard`;
       //window.location.href = `${API_URL}/auth/google`;
     }
       return null;
