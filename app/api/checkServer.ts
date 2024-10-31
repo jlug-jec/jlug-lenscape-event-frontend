@@ -79,7 +79,7 @@ export const checkServerStatus = async (setIsLoading: Dispatch<SetStateAction<bo
         alert("Please open this link in your actual browser (e.g., Chrome, Safari) to continue and for a better experience");
     } else {
       
-      window.location.href=`lenscape.jlug.club/leaderboard`;
+      window.location.href=`/leaderboard`;
       //window.location.href = `${API_URL}/auth/google`;
     }
       return null;
