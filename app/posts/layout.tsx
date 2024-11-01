@@ -1,3 +1,6 @@
+import 'react-toastify/dist/ReactToastify.css'
+import "../../app/globals.css"
+
 export const metadata = {
   title: 'Lenscape Voting',
   description: 'Voting has started for lenscape',

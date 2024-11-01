@@ -1,5 +1,7 @@
 import { Footer } from '@/components/footer';
 import { Suspense } from 'react';
+import "../../app/globals.css";
+import 'react-toastify/dist/ReactToastify.css';
 
 export const metadata = {
   title: 'Onboarding page',

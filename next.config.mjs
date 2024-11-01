@@ -12,17 +12,17 @@ const nextConfig = {
     return [
       {
         source: '/posts',
-        destination: '/countdown',
+        destination: '/gallery',
         permanent: true, // Use true for a permanent 308 redirect, false for a temporary 307 redirect
       },
       {
         source: '/profile',
-        destination: '/leaderboard',
+        destination: '/gallery',
         permanent: true, // Use true for a permanent 308 redirect, false for a temporary 307 redirect
       },
       {
         source: '/onboarding',
-        destination: '/leaderboard',
+        destination: '/gallery',
         permanent: true, // Use true for a permanent 308 redirect, false for a temporary 307 redirect
       },
     ];

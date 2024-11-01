@@ -1,34 +1,30 @@
 "use client"
-import { use, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter,useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { BarLoader, CircleLoader } from 'react-spinners'
+import { ToastContainer, toast } from 'react-toastify';
+import { FaCamera } from 'react-icons/fa';
+import { v4 as uuidv4 } from 'uuid';
 import { motion } from 'framer-motion';
+
+import { TeamMember } from '../types/user';
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { BarLoader, CircleLoader } from 'react-spinners'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import useUserStore from '@/store/useUserStore';
-import { FaCamera } from 'react-icons/fa';
-import "../../app/globals.css";
-import { useSearchParams } from 'next/navigation';
-import { v4 as uuidv4 } from 'uuid';
-import local from 'next/font/local';
-import { exchangeCodeForTokens, regenerateJwtToken } from '../api/checkServer';
-import { getUserDetails } from '../api/userApi';
 import { authenticatedFetch, AuthError } from '@/lib/auth.utils';
-interface TeamMember {
-  name: string;
-  email: string;
-  branch: string;
-  collegeName: string;
-  userId: string | null; // Can change this to string | null if userId can be null
-}
+
+import { exchangeCodeForTokens} from '../api/checkServer';
+import { getUserDetails } from '../api/userApi';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+
 export default function OnboardingPage() {
   const router = useRouter();
-  const { user,setUser,loadUser } = useUserStore();
+  const { user,setUser } = useUserStore();
   const searchParams = useSearchParams();
   
   const [isInvited, setIsInvited] = useState(false);
@@ -39,40 +35,24 @@ export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [teamName, setTeamName] = useState('');
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([ { name: '', email: '', branch: '', collegeName: '', userId: '' }] as any[]);
-
-   
-   
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
-
-interface TeamMember {
-  name: string;
-  email: string;
-  branch: string;
-  collegeName: string;
-  userId: string | null | undefined;
-  [key: string]: any;
-}
-
   const [photographyLink, setPhotographyLink] = useState('');
   const [photographyTitle, setPhotographyTitle] = useState('');
-  const [photoType, setPhotoType] = useState('image');
   const [videographyLink, setVideographyLink] = useState('');
   const [videographyTitle, setVideographyTitle] = useState('');
-  const [videoType, setVideoType] = useState('');
   const [digitalArtLink, setDigitalArtLink] = useState('');
   const [digitalArtTitle, setDigitalArtTitle] = useState('');
-  const [digitalArtType, setDigitalArtType] = useState(null);
+
   const [teamLeaderIndex, setTeamLeaderIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [teamId, setTeamId] = useState(uuidv4());
-  const [isDriveChecking,setIsDriveChecking]=useState(false);
+
   const onboarded=searchParams.get("onboarded")
   const [isParticipantStatus, setIsParticipantStatus] = useState(false);
   
   const invitedTeamId = searchParams.get('teamId');
   let jwtToken:string | null
-  let incomingUserData:any
+  
   let refreshToken:string | undefined |null
   const handleAuth = async () => {
     try {
@@ -513,22 +493,14 @@ interface TeamMember {
           )}
         </CardContent>
         <div className="flex justify-between px-4 pb-4">
-          <Button  disabled={isLoading || isDriveChecking} onClick={() => currentStep === 0 ? router.push('/') : setCurrentStep(0)}>
+          <Button  disabled={isLoading } onClick={() => currentStep === 0 ? router.push('/') : setCurrentStep(0)}>
             {currentStep === 0 ? "Cancel" : "Back"}
           </Button>
           {isLoading && <BarLoader color="#ffffff" />}
           <div className="flex items-center space-x-2">
-  {isDriveChecking && (
-    <>
-      <CircleLoader color="#4CAF50" size={16} />
-      <p className="text-green-500 text-xs font-medium animate-pulse">
-        Verifying Google Drive link...
-      </p>
-    </>
-  )}
 </div>
 
-          <Button onClick={handleNextStep} disabled={isLoading || isDriveChecking}>
+          <Button onClick={handleNextStep} disabled={isLoading}>
           {currentStep === 0 
           ? (isInvited 
               ? "Join Team" 

@@ -1,4 +1,6 @@
 import { Footer } from '@/components/footer';
+import "../../app/globals.css"
+import { Header } from '@/components/homePageHeader';
 
 export const metadata = {
   title: 'Leaderboard page',
@@ -13,7 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-      
+        <Header/>
         {children}
         <Footer/>
         </body>

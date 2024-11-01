@@ -10,6 +10,7 @@ export interface Post {
   votes: string[];
   type: string; 
   teamId: string;
+  teamName:string
 }
 
 
@@ -19,3 +20,14 @@ export interface Post {
    
     teamName:string
   }
+
+  export interface Submission {
+    _id: string
+    teamName: string
+    domain: string
+    title: string
+    url: string
+    type: string
+    votes: string[]
+  }
+  
