@@ -1,14 +1,12 @@
 import { toast } from 'react-toastify';
 import { Post } from '../types/post';
 import { authenticatedFetch } from '@/lib/auth.utils';
+import { getLocalStorageItem } from '@/lib/utils';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 // Safe localStorage access
-const getLocalStorageItem = (key: string): string | null => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem(key);
-  }
-  return null;
-};
+
+
+
 
 export const postApi = {
   createPost: async (postData: Post) => {
@@ -163,39 +161,4 @@ export const postApi = {
 
     return await response.json();
   }
-};
-
-// You might want to add a separate API object for user-related operations
-export const userApi = {
-  login: async (credentials: { email: string, password: string }) => {
-    const response = await fetch(`${API_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
-    });
-
-    if (!response.ok) {
-      toast.error('Login failed');
-      throw new Error('Login failed');
-    }
-
-    const data = await response.json();
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('jwtToken', data.token);
-      localStorage.setItem('refreshToken', data.refreshToken);
-    }
-
-    return data;
-  },
-
-  logout: () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('jwtToken');
-      localStorage.removeItem('refreshToken');
-    }
-  },
-
-  // Add more user-related methods as needed
 };

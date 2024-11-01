@@ -78,9 +78,8 @@ export const checkServerStatus = async (setIsLoading: Dispatch<SetStateAction<bo
         // Show an alert to inform the user to open in a real browser
         alert("Please open this link in your actual browser (e.g., Chrome, Safari) to continue and for a better experience");
     } else {
-      
-      window.location.href=`/leaderboard`;
-      //window.location.href = `${API_URL}/auth/google`;
+       window.location.href=`/gallery`;
+      // window.location.href = `${API_URL}/auth/google`;
     }
       return null;
   };

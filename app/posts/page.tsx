@@ -1,47 +1,26 @@
 "use client"
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+
+import React from 'react'
 import { useState, useRef, useEffect } from 'react'
 import TinderCard from 'react-tinder-card'
+import ReactPlayer from 'react-player'
+import { toast, ToastContainer } from 'react-toastify'
+
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight, RotateCcw, Heart, ThumbsDown, Loader2 } from "lucide-react"
+import { ChevronRight, Heart, ThumbsDown, Loader2 } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { postApi } from "@/app/api/posts"
-import React from 'react'
-import Image from 'next/image'
-import ReactPlayer from 'react-player'
-import { toast, ToastContainer } from 'react-toastify'
-import { useRouter } from 'next/navigation'
-import 'react-toastify/dist/ReactToastify.css'
-import "../../app/globals.css"
 
-interface Submission {
-  _id: string
-  teamName: string
-  domain: string
-  title: string
-  url: string
-  type: string
-  votes: string[]
-}
+import { Submission } from '../types/post'
+import { getOptimizedDriveUrl, getLocalStorageItem } from '@/lib/utils'
 
-const getLocalStorageItem = (key: string): string | null => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem(key);
-  }
-  return null;
-};
 
-// Helper function to extract and format Drive URL
-const getOptimizedDriveUrl = (url: string): string => {
-  try {
-    const fileId = url.split('/d/')[1]?.split('/')[0];
-    if (!fileId) throw new Error('Invalid Drive URL');
-    // Use the direct download URL format which is typically faster
-    return `https://drive.google.com/uc?export=download&id=${fileId}`;
-  } catch {
-    return url;
-  }
-};
+
+
 
 export default function LenscapeVoting() {
   const [submissions, setSubmissions] = useState<Submission[]>([])

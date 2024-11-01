@@ -15,7 +15,7 @@ export const Header = () => {
             <div className="flex items-center space-x-2 sm:space-x-4">
               <div className="hidden sm:flex items-center justify-center px-3 py-1 bg-red-500 bg-opacity-20 rounded-full">
                 <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse mr-2" />
-                <span className="text-red-300 text-sm font-semibold">LIVE</span>
+                <span className="text-red-300 text-sm font-semibold">COMPLETED</span>
               </div>
               <h1 className="text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-white">
                 LENSCAPE 2024
@@ -25,7 +25,7 @@ export const Header = () => {
             {/* Center section */}
             <div className="flex items-center space-x-2 sm:space-x-4">
               <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 animate-pulse" />
-              <span className="text-yellow-400 text-sm sm:text-base font-medium">Event in Progress</span>
+              <span className="text-yellow-400 text-sm sm:text-base font-medium">Event has ended</span>
               <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 animate-pulse" />
             </div>
           </div>

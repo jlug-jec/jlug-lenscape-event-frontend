@@ -106,7 +106,7 @@ export default function ResponsiveCountdown() {
         </Button>
       )}
 
-      {/* {!isParticipated && (
+      {!isParticipated && (
         <Button
           className="mt-4 sm:mt-6 lg:mt-8 bg-white/10 z-[999] text-neutral-100 transition-colors duration-300 cursor-pointer text-sm sm:text-base"
           size="lg"
@@ -114,7 +114,7 @@ export default function ResponsiveCountdown() {
         >
           Want to participate? Click here!
         </Button>
-      )} */}
+      )}
 
     </BackgroundLines>
   )

@@ -31,7 +31,8 @@ export default function ProfilePage() {
   const router = useRouter();
   let jwtToken : string | null = '';
   let refreshToken : string | undefined = '';
-const fetchUserData = async () => {
+
+  const fetchUserData = async () => {
   try {
     if (!localStorage.getItem('_id')) {
       router.push('/');
