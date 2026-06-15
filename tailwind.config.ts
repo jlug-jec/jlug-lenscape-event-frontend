@@ -1,80 +1,76 @@
-import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss";
 
-const config = {
-  darkMode: ["class"],
+const config: Config = {
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
-	],
-  prefix: "",
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx,mdx}",
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
   theme: {
-    container: {
-      center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
-    },
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
+        // Y2K Primary Colors
+        'y2k-black': '#0a0a0a',
+        'y2k-pink': '#FF69B4',
+        'y2k-cyan': '#00FFFF',
+        'y2k-lime': '#39FF14',
+        'y2k-purple': '#9400D3',
+        'y2k-yellow': '#FFFF00',
+        'y2k-orange': '#FF6600',
+        // Chrome/Metallic
+        'chrome': '#C0C0C0',
+        'chrome-dark': '#808080',
+        'chrome-light': '#E8E8E8',
+        // Glass
+        'glass': 'rgba(255, 255, 255, 0.15)',
+        'glass-dark': 'rgba(0, 0, 0, 0.4)',
+        'glass-pink': 'rgba(255, 105, 180, 0.2)',
+        'glass-cyan': 'rgba(0, 255, 255, 0.2)',
+        // Exhibition Rebuild Colors
+        'exhibition-void': '#080808',
+        'exhibition-gold': '#C9A84C',
+        'exhibition-bone': '#F5F0E8',
+        'exhibition-fog': 'rgba(245, 240, 232, 0.06)',
       },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
-      keyframes: {
-        "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
-        },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
-        },
+      fontFamily: {
+        // Artistic display font
+        display: ['Syne', 'sans-serif'],
+        // Clean modern sans-serif
+        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+        // Editorial headings
+        editorial: ['"Cormorant Garamond"', 'serif'],
+        // Space Grotesk for mono/body elements
+        mono: ['"Space Grotesk"', 'monospace'],
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
+        'float': 'float 6s ease-in-out infinite',
+        'glow': 'glow 3s ease-in-out infinite',
+        'slide-up': 'slideUp 0.8s ease-out',
+        'fade-in': 'fadeIn 1s ease-out',
+      },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-20px)' },
+        },
+        glow: {
+          '0%, 100%': { opacity: 0.5 },
+          '50%': { opacity: 1 },
+        },
+        slideUp: {
+          '0%': { transform: 'translateY(100px)', opacity: 0 },
+          '100%': { transform: 'translateY(0)', opacity: 1 },
+        },
+        fadeIn: {
+          '0%': { opacity: 0 },
+          '100%': { opacity: 1 },
+        },
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
-} satisfies Config
+  plugins: [],
+};
 
-export default config
+export default config;
