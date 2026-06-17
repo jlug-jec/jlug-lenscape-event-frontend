@@ -7,6 +7,7 @@ import ProfilePage from './pages/ProfilePage'
 import ProfileSetupPage from './pages/ProfileSetupPage'
 import AdminPage from './pages/AdminPage'
 import AdminLoginPage from './pages/AdminLoginPage'
+import AdminSignupPage from './pages/AdminSignupPage'
 import SubmitPage from './pages/SubmitPage'
 import SmoothScroll from './components/SmoothScroll'
 import { AppProvider } from './context/AppContext'
@@ -30,6 +31,7 @@ function App() {
             {/* Admin — no link from nav, direct URL only */}
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/login" element={<AdminLoginPage />} />
+            <Route path="/admin/signup" element={<AdminSignupPage />} />
           </Routes>
         </SmoothScroll>
       </Router>

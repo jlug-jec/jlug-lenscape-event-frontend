@@ -115,7 +115,7 @@ const CinematicIntro: React.FC<CinematicIntroProps> = ({ onComplete, preloadUrls
                 initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
                 animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                 transition={{ delay: 0.2, duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
-                className="text-5xl sm:text-7xl md:text-8xl font-extrabold tracking-[0.2em] text-exhibition-bone uppercase"
+                className="text-3xl sm:text-6xl md:text-8xl font-extrabold tracking-[0.2em] text-exhibition-bone uppercase px-4 sm:px-0"
                 style={{ textShadow: '0 0 40px rgba(201,168,76,0.28)' }}
               >
                 Lenscape

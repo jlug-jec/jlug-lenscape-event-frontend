@@ -1,12 +1,12 @@
 import React, { useRef, useEffect, useState, Suspense, useMemo, useCallback } from 'react'
 import { Canvas, useFrame, useThree, useLoader } from '@react-three/fiber'
-import { Text } from '@react-three/drei'
+import { Text, Sparkles } from '@react-three/drei'
 import * as THREE from 'three'
 import { TextureLoader } from 'three'
 import { Artwork } from '../types'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const MAX_Z = 5
+const MAX_Z = 8
 const MIN_Z = -35
 
 // Shared gold material — created once, reused everywhere
@@ -156,6 +156,129 @@ const Painting: React.FC<PaintingProps> = ({ artwork, position, rotation, onSele
   )
 }
 
+// ─── Wall Lamp Component ──────────────────────────────────────────────────────
+const WallLamp: React.FC<{ position: [number, number, number]; isLeft?: boolean; rotationY?: number }> = ({ position, isLeft, rotationY }) => {
+  const yRot = rotationY !== undefined ? rotationY : (isLeft ? Math.PI / 2 : -Math.PI / 2);
+  return (
+    <group position={position} rotation={[0, yRot, 0]}>
+      {/* Base on wall */}
+      <mesh position={[0, 0, 0.02]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.1, 0.1, 0.04, 32]} />
+        <meshStandardMaterial color="#C9A84C" metalness={1} roughness={0.1} />
+      </mesh>
+
+      {/* Golden Halo Ring */}
+      <mesh position={[0, 0, 0.1]} rotation={[0, 0, 0]}>
+        <torusGeometry args={[0.25, 0.03, 16, 64]} />
+        <meshStandardMaterial color="#fff" emissive="#ffe8cc" emissiveIntensity={1} metalness={0.8} roughness={0.2} />
+      </mesh>
+
+      {/* Arched Arm */}
+      <mesh position={[0, 0.25, 0.15]} rotation={[0, 0, 0]}>
+        <torusGeometry args={[0.15, 0.015, 16, 32, Math.PI]} />
+        <meshStandardMaterial color="#C9A84C" metalness={1} roughness={0.1} />
+      </mesh>
+
+      {/* Hanging Lamp Cap */}
+      <mesh position={[0, 0.1, 0.3]} rotation={[0, 0, 0]}>
+        <cylinderGeometry args={[0.08, 0.08, 0.08, 32]} />
+        <meshStandardMaterial color="#C9A84C" metalness={1} roughness={0.1} />
+      </mesh>
+
+      {/* Cascading Glass Shade */}
+      <mesh position={[0, -0.15, 0.3]} rotation={[0, 0, 0]}>
+        <coneGeometry args={[0.22, 0.45, 32, 1, true]} />
+        <meshPhysicalMaterial 
+          color="#ffffff" 
+          transmission={0.9} 
+          opacity={1} 
+          transparent 
+          roughness={0.15} 
+          ior={1.5} 
+          thickness={0.02} 
+          side={THREE.DoubleSide} 
+        />
+      </mesh>
+
+      {/* Gold Flakes (Sparkles inside the shade) */}
+      <Sparkles position={[0, -0.15, 0.3]} count={40} scale={[0.3, 0.4, 0.3]} size={1.5} color="#ffd700" speed={0.2} opacity={0.8} />
+
+      {/* Light Source */}
+      <pointLight position={[0, 0.05, 0.3]} intensity={6} color="#ffe8cc" distance={12} />
+    </group>
+  )
+}
+
+// ─── Chandelier Component ─────────────────────────────────────────────────────
+const Chandelier: React.FC<{ position: [number, number, number] }> = ({ position }) => {
+  return (
+    <group position={position}>
+      {/* 1. Golden Base Mount on Ceiling */}
+      <mesh position={[0, 0.75, 0]}>
+        <cylinderGeometry args={[0.15, 0.15, 0.05, 32]} />
+        <meshStandardMaterial color="#D4AF37" metalness={1} roughness={0.2} />
+      </mesh>
+
+      {/* 2. Thin suspension wires holding the rings */}
+      {[0, 1, 2].map((i) => {
+        const angle = (i / 3) * Math.PI * 2;
+        const x = Math.cos(angle) * 0.1;
+        const z = Math.sin(angle) * 0.1;
+        return (
+          <mesh key={`wire-${i}`} position={[x, 0.35, z]} rotation={[0.05, angle, 0]}>
+            <cylinderGeometry args={[0.003, 0.003, 0.8, 4]} />
+            <meshStandardMaterial color="#aaa" metalness={0.8} roughness={0.4} />
+          </mesh>
+        );
+      })}
+
+      {/* 3. Intersecting / Tilted Modern Halo Rings */}
+      {/* Ring 1 (Large, tilted) */}
+      <group position={[0, 0, 0]} rotation={[0.3, 0.5, -0.2]}>
+        <mesh>
+          <torusGeometry args={[0.8, 0.02, 16, 64]} />
+          <meshStandardMaterial color="#D4AF37" metalness={1} roughness={0.2} />
+        </mesh>
+        <mesh position={[0, -0.015, 0]}>
+          <torusGeometry args={[0.78, 0.015, 16, 64]} />
+          <meshStandardMaterial color="#fff" emissive="#ffe8b3" emissiveIntensity={3} />
+        </mesh>
+      </group>
+
+      {/* Ring 2 (Medium, tilted opposite) */}
+      <group position={[0, -0.3, 0]} rotation={[-0.4, -0.6, 0.3]}>
+        <mesh>
+          <torusGeometry args={[0.55, 0.02, 16, 64]} />
+          <meshStandardMaterial color="#D4AF37" metalness={1} roughness={0.2} />
+        </mesh>
+        <mesh position={[0, -0.015, 0]}>
+          <torusGeometry args={[0.53, 0.015, 16, 64]} />
+          <meshStandardMaterial color="#fff" emissive="#ffe8b3" emissiveIntensity={3} />
+        </mesh>
+      </group>
+
+      {/* Ring 3 (Small, horizontal) */}
+      <group position={[0, -0.6, 0]} rotation={[0.1, 0, -0.1]}>
+        <mesh>
+          <torusGeometry args={[0.3, 0.02, 16, 64]} />
+          <meshStandardMaterial color="#D4AF37" metalness={1} roughness={0.2} />
+        </mesh>
+        <mesh position={[0, -0.015, 0]}>
+          <torusGeometry args={[0.28, 0.015, 16, 64]} />
+          <meshStandardMaterial color="#fff" emissive="#ffe8b3" emissiveIntensity={3} />
+        </mesh>
+      </group>
+
+      {/* 4. Core Light */}
+      {/* Real illumination comes from a single point light */}
+      <pointLight position={[0, -0.3, 0]} intensity={3} distance={15} color="#ffe8b3" />
+
+      {/* 5. Dust / Sparkles inside the rings for magic ambiance */}
+      <Sparkles position={[0, -0.3, 0]} count={30} scale={[1.6, 1.2, 1.6]} size={1.5} color="#ffd700" speed={0.3} opacity={0.6} />
+    </group>
+  );
+}
+
 // ─── Gallery Environment ──────────────────────────────────────────────────────
 const GalleryEnvironment: React.FC<{ isMobile: boolean; floorTexture: THREE.CanvasTexture | null }> = ({
   isMobile,
@@ -170,6 +293,21 @@ const GalleryEnvironment: React.FC<{ isMobile: boolean; floorTexture: THREE.Canv
       <ambientLight intensity={isMobile ? 0.9 : 0.7} color="#fff1e6" />
       <directionalLight position={[0, 10, 0]} intensity={0.5} color="#ffe8cc" />
 
+      {/* Realistic Wall Lamps */}
+      <WallLamp position={[-wallX, 3.5, -10]} isLeft={true} />
+      <WallLamp position={[ wallX, 3.5, -16]} isLeft={false} />
+      <WallLamp position={[-wallX, 3.5, -24]} isLeft={true} />
+      <WallLamp position={[ wallX, 3.5, -30]} isLeft={false} />
+      {/* Front Wall Lamps (Back of the hall, facing camera) */}
+      <WallLamp position={[-2.5, 3.5, -36.98]} rotationY={0} />
+      <WallLamp position={[ 2.5, 3.5, -36.98]} rotationY={0} />
+
+      {/* Grand Chandeliers */}
+      <Chandelier position={[0, 3.2, -4]} />
+      <Chandelier position={[0, 3.2, -14]} />
+      <Chandelier position={[0, 3.2, -24]} />
+      <Chandelier position={[0, 3.2, -34]} />
+
       {/* 2 floor uplights instead of 3 */}
       <pointLight position={[-wallX + 0.5, -1.8, -12]} intensity={3} color="#ff9d00" distance={7} />
       <pointLight position={[ wallX - 0.5, -1.8, -26]} intensity={3} color="#ff9d00" distance={7} />
@@ -183,22 +321,32 @@ const GalleryEnvironment: React.FC<{ isMobile: boolean; floorTexture: THREE.Canv
       {/* Ceiling */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 4, -20]}>
         <planeGeometry args={[fcW, 80]} />
-        <meshStandardMaterial color="#f2eae1" roughness={0.85} />
+        <meshStandardMaterial color="#2e2b26" roughness={0.85} />
       </mesh>
+      {/* Starry sparkles on ceiling */}
+      <Sparkles position={[0, 3.8, -20]} scale={[fcW, 1, 80]} count={250} speed={0.4} opacity={0.6} color="#ffe8cc" size={1.5} />
 
       {/* Walls */}
       <mesh rotation={[0,  Math.PI / 2, 0]} position={[-wallX, 1, -20]}>
         <planeGeometry args={[80, 6]} />
-        <meshStandardMaterial color="#f2eae1" roughness={0.85} />
+        <meshStandardMaterial color="#2e2b26" roughness={0.85} />
       </mesh>
+      {/* Starry sparkles on left wall */}
+      <Sparkles position={[-wallX + 0.1, 1, -20]} scale={[1, 6, 80]} count={200} speed={0.3} opacity={0.5} color="#ffe8cc" size={2} />
+
       <mesh rotation={[0, -Math.PI / 2, 0]} position={[ wallX, 1, -20]}>
         <planeGeometry args={[80, 6]} />
-        <meshStandardMaterial color="#f2eae1" roughness={0.85} />
+        <meshStandardMaterial color="#2e2b26" roughness={0.85} />
       </mesh>
+      {/* Starry sparkles on right wall */}
+      <Sparkles position={[wallX - 0.1, 1, -20]} scale={[1, 6, 80]} count={200} speed={0.3} opacity={0.5} color="#ffe8cc" size={2} />
+
       <mesh position={[0, 1, -37]}>
         <planeGeometry args={[fcW, 6]} />
-        <meshStandardMaterial color="#f2eae1" roughness={0.85} />
+        <meshStandardMaterial color="#2e2b26" roughness={0.85} />
       </mesh>
+      {/* Starry sparkles on back wall */}
+      <Sparkles position={[0, 1, -36.9]} scale={[fcW, 6, 1]} count={50} speed={0.3} opacity={0.5} color="#ffe8cc" size={2} />
 
       {/* Gold trims — shared material */}
       {[-wallX + 0.02, wallX - 0.02].map((x) => (
@@ -207,6 +355,9 @@ const GalleryEnvironment: React.FC<{ isMobile: boolean; floorTexture: THREE.Canv
           <mesh position={[x,  3.9, -20]} material={GOLD_MAT}><boxGeometry args={[0.04, 0.2, 80]} /></mesh>
         </React.Fragment>
       ))}
+      {/* Back wall gold trims */}
+      <mesh position={[0, -1.9, -36.98]} material={GOLD_MAT}><boxGeometry args={[fcW, 0.2, 0.04]} /></mesh>
+      <mesh position={[0,  3.9, -36.98]} material={GOLD_MAT}><boxGeometry args={[fcW, 0.2, 0.04]} /></mesh>
 
       {/* Quote above Starry Night */}
       <Suspense fallback={null}>
@@ -214,7 +365,7 @@ const GalleryEnvironment: React.FC<{ isMobile: boolean; floorTexture: THREE.Canv
           position={[0, 2.65, -36.9]}
           fontSize={0.13}
           maxWidth={isMobile ? 5.5 : 7.5}
-          color="#1c1c1c"
+          color="#C9A84C"
           textAlign="center"
           anchorX="center"
           anchorY="middle"
@@ -260,8 +411,18 @@ const CameraController: React.FC<CameraControllerProps> = ({ scrollPercent, focu
         lookTarget.current.set(px, py, pz)
       }
     } else {
-      const targetZ = MAX_Z - scrollPercent * (MAX_Z - MIN_Z)
-      // Removed bobbing sine wave — no perceptible loss, saves sin() per frame
+      // Re-map the scroll percentage so the camera reaches its destination at 80% of the total scroll.
+      // This leaves the remaining 20% of the scroll container to just hold the view, 
+      // ensuring the lerp completes and the painting fully covers the screen 
+      // BEFORE the sticky container releases and scrolls up.
+      const effectiveScroll = Math.min(1.0, scrollPercent / 0.8);
+
+      // End the scroll very close to Starry Night so it fills the screen completely.
+      // Starry Night is located at MIN_Z - 1.96. 
+      // A distance of ~0.5 units guarantees it covers both mobile and desktop viewports.
+      const END_Z = MIN_Z - 1.96 + 0.5;
+      const targetZ = MAX_Z - effectiveScroll * (MAX_Z - END_Z)
+      
       camTarget.current.set(0, 1, targetZ)
       lookTarget.current.set(0, 1, targetZ - 10)
     }
@@ -324,13 +485,13 @@ const ThreeExhibitionScene: React.FC<ThreeExhibitionSceneProps> = ({
   const paintings = useMemo(() => {
     const wallX    = isMobile ? 3.4 : 5.0
     const paintX   = wallX - 0.04
-    const stepZ    = (MAX_Z - MIN_Z - 12) / Math.max(approvedArtworks.length, 1)
+    const stepZ    = (MAX_Z - MIN_Z - 16) / Math.max(approvedArtworks.length, 1)
     const list: { pos: [number, number, number]; rot: [number, number, number]; artwork: Artwork }[] = []
 
     approvedArtworks.forEach((artwork, i) => {
       const isLeft = i % 2 === 0
       list.push({
-        pos: [isLeft ? -paintX : paintX, 1.0, MAX_Z - 6 - i * stepZ],
+        pos: [isLeft ? -paintX : paintX, 1.0, MAX_Z - 10 - i * stepZ],
         rot: [0, isLeft ? Math.PI / 2 : -Math.PI / 2, 0],
         artwork,
       })

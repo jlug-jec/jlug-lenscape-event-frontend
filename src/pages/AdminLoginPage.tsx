@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ShieldCheck, Eye, EyeOff, Lock } from 'lucide-react'
 
@@ -7,12 +7,9 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 export default function AdminLoginPage() {
   const navigate = useNavigate()
-  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [secretKey, setSecretKey] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [showSecret, setShowSecret] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -25,7 +22,7 @@ export default function AdminLoginPage() {
       const res = await fetch(`${API}/api/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, secretKey }),
+        body: JSON.stringify({ email, password }),
       })
       const data = await res.json()
 
@@ -66,7 +63,7 @@ export default function AdminLoginPage() {
             Lenscape
           </span>
           <h1 className="editorial-text text-3xl font-light text-exhibition-bone">
-            Curator Access
+            Curator Login
           </h1>
           <p className="font-mono text-[10px] text-zinc-600 mt-2 uppercase tracking-wider">
             Restricted — authorised personnel only
@@ -79,20 +76,6 @@ export default function AdminLoginPage() {
           {['top-2 left-2','top-2 right-2','bottom-2 left-2','bottom-2 right-2'].map(pos => (
             <div key={pos} className={`absolute ${pos} w-1.5 h-1.5 bg-exhibition-gold/25 rounded-full`} />
           ))}
-
-          {/* Name */}
-          <div>
-            <label className="block font-mono text-[9px] text-zinc-500 uppercase tracking-widest mb-2">
-              Name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="Your name (required for first login)"
-              className="w-full bg-[#111] border border-zinc-800 text-xs font-mono px-4 py-3 text-exhibition-bone focus:outline-none focus:border-exhibition-gold/50 placeholder:text-zinc-700"
-            />
-          </div>
 
           {/* Email */}
           <div>
@@ -130,27 +113,6 @@ export default function AdminLoginPage() {
             </div>
           </div>
 
-          {/* Secret Key */}
-          <div>
-            <label className="block font-mono text-[9px] text-zinc-500 uppercase tracking-widest mb-2">
-              Secret Key
-            </label>
-            <div className="relative">
-              <input
-                type={showSecret ? 'text' : 'password'}
-                value={secretKey}
-                onChange={e => setSecretKey(e.target.value)}
-                required
-                placeholder="••••••••••••"
-                className="w-full bg-[#111] border border-zinc-800 text-xs font-mono px-4 py-3 pr-10 text-exhibition-bone focus:outline-none focus:border-exhibition-gold/50 placeholder:text-zinc-700"
-              />
-              <button type="button" onClick={() => setShowSecret(v => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-400">
-                {showSecret ? <EyeOff size={14} /> : <Eye size={14} />}
-              </button>
-            </div>
-          </div>
-
           {/* Error */}
           {error && (
             <p className="font-mono text-[10px] text-red-400 border border-red-500/20 bg-red-500/5 px-3 py-2">
@@ -170,7 +132,7 @@ export default function AdminLoginPage() {
         </form>
 
         <p className="text-center font-mono text-[9px] text-zinc-700 mt-6 uppercase tracking-widest">
-          This area is not publicly accessible
+          New admin? <Link to="/admin/signup" className="text-exhibition-gold hover:underline">Register here</Link>
         </p>
       </motion.div>
     </div>

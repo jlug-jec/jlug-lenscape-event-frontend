@@ -368,7 +368,7 @@ export default function GalleryPage() {
               </button>
 
               {/* Left Side: Media display */}
-              <div className="w-full md:w-[65%] h-64 sm:h-80 md:h-full flex-shrink-0 bg-black flex items-center justify-center relative p-6 border-b md:border-b-0 md:border-r border-zinc-900">
+              <div className="w-full md:w-[65%] h-64 sm:h-80 md:h-full flex-shrink-0 bg-black flex items-center justify-center relative border-b md:border-b-0 md:border-r border-zinc-900 overflow-hidden">
                 <div className="absolute top-0 w-32 h-32 bg-exhibition-gold/10 blur-xl rounded-full" />
                 
                 {selectedArtwork.videoUrl ? (
@@ -398,7 +398,7 @@ export default function GalleryPage() {
                   <img
                     src={selectedArtwork.imageUrl}
                     alt={selectedArtwork.title}
-                    className="max-w-full max-h-full object-contain shadow-2xl border border-white/5"
+                    className="w-full h-full object-contain"
                   />
                 ) : (
                   <div className="text-zinc-500 font-mono text-sm">Media Unavailable</div>
@@ -445,7 +445,7 @@ export default function GalleryPage() {
                         </button>
                         {hasVoted && (
                           <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-                            You have already voted for {selectedArtwork?.category.replace('-', ' ')}
+                            You have already voted for {selectedArtwork?.category.replace('-', ' ')} category
                             <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-zinc-700"></div>
                           </div>
                         )}

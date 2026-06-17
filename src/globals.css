@@ -374,3 +374,18 @@
   50% { text-shadow: -1px 1px 0 var(--color-gold), 1px -1px 0 #FFF; }
   100% { text-shadow: 1px 1px 0 var(--color-gold), -1px -1px 0 #FFF; }
 }
+
+
+
+/* Global Color Overrides */
+/* Change all grey text to white */
+.text-zinc-300, .text-zinc-400, .text-zinc-500, .text-zinc-600, .text-zinc-700,
+.text-gray-300, .text-gray-400, .text-gray-500, .text-gray-600, .text-gray-700,
+.text-zinc-800 {
+  color: #ffffff !important;
+}
+
+/* Darken black backgrounds */
+.bg-zinc-800, .bg-zinc-900, .bg-zinc-950, .bg-\[\#0c0c0c\], .bg-\[\#111\], .bg-\[\#111111\], .bg-\[\#0a0a0a\], .bg-\[\#0d0d0d\] {
+  background-color: #000000 !important;
+}

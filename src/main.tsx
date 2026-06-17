@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import './globals.css'
 import { useAuthStore } from './store/authStore'
+import { syncUserProfile } from './lib/session'
 
 // On boot: if Zustand store has no user but we have legacy localStorage token,
 // hydrate the store from legacy keys so the user stays logged in across deploys.
@@ -27,6 +28,9 @@ const bootstrapAuth = () => {
 }
 
 bootstrapAuth()
+
+// Fetch full user profile from backend so all fields are up to date
+syncUserProfile()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

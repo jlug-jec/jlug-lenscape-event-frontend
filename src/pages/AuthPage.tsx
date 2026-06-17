@@ -4,7 +4,7 @@ import { ArrowLeft, Mail, Lock, CheckCircle, RefreshCw, Eye, EyeOff } from 'luci
 import { motion, AnimatePresence } from 'framer-motion'
 import { signInWithPopup } from 'firebase/auth'
 import { auth, googleProvider } from '../lib/firebase'
-import { saveSession } from '../lib/session'
+import { saveSession, syncUserProfile } from '../lib/session'
 import ParticleField from '../components/ParticleField'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
@@ -81,6 +81,7 @@ export default function AuthPage() {
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Google sign-in failed'); setLoading(false); return }
       saveSession(data)
+      syncUserProfile()
       routeAfterAuth(data.profileComplete)
     } catch (e: any) {
       if (e?.code === 'auth/popup-closed-by-user') setError('Sign-in cancelled.')
@@ -102,6 +103,7 @@ export default function AuthPage() {
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Login failed'); setLoading(false); return }
       saveSession(data)
+      syncUserProfile()
       routeAfterAuth(data.profileComplete)
     } catch {
       setError('Cannot reach server.')
@@ -162,6 +164,7 @@ export default function AuthPage() {
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Verification failed'); setLoading(false); return }
       saveSession(data)
+      syncUserProfile()
       routeAfterAuth(false)
     } catch {
       setError('Cannot reach server.')

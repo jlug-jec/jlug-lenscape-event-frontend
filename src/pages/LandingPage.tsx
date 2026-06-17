@@ -91,6 +91,15 @@ export default function LandingPage() {
           setShowNav(false)
         }
       }
+
+      // Close artwork details if user scrolls past the 3D corridor
+      const corridor = document.querySelector('[data-corridor="true"]')
+      if (corridor) {
+        const bottom = corridor.getBoundingClientRect().bottom
+        if (bottom < window.innerHeight * 0.8) {
+          setSelectedArtwork(prev => prev !== null ? null : prev)
+        }
+      }
     }
     window.addEventListener('scroll', handleScroll)
     // Trigger once on mount to set initial state
@@ -208,6 +217,31 @@ export default function LandingPage() {
       comments: [],
       createdAt: new Date('2024-10-20'),
     },
+    {
+  id: 'winner-photo-pranjal-waadiyan-2025',
+  title: 'Waadiyan',
+  category: 'photography',
+  subCategory: 'landscape-photography',
+  artist: {
+    id: 'pranjal',
+    name: 'Pranjal',
+    email: '',
+    college: 'Lenscape 2024',
+    branch: '',
+    year: '',
+    avatar: null,
+    bio: 'A photographer passionate about capturing the grandeur of nature and the serenity of mountain landscapes.',
+    joinedDate: new Date('2024-10-20')
+  },
+  votes: 26,
+  imageUrl: 'https://res.cloudinary.com/dsjhcv06g/image/upload/v1781708427/Waadiyan.jpg',
+  thumbnailUrl: null,
+  videoUrl: null,
+  description: 'A breathtaking panoramic view of a Himalayan valley where towering snow-capped peaks surround a winding river below. The dramatic clouds and rugged terrain create a powerful sense of scale, tranquility, and the raw beauty of the mountains.',
+  status: 'approved' as const,
+  comments: [],
+  createdAt: new Date('2024-10-20'),
+}
   ]
   
 
@@ -343,11 +377,11 @@ export default function LandingPage() {
 
           {/* 
             Scroll-jacked 3D corridor.
-            The outer div is 300vh tall — this is the "scroll budget" for the camera walk.
+            The outer div is 400vh tall — this is the "scroll budget" for the camera walk.
             The inner div is sticky, so the canvas stays fixed while the user scrolls
-            through the 300vh. Once past it, normal page content resumes.
+            through the 400vh. Once past it, normal page content resumes.
           */}
-          <div className="relative" style={{ height: '300vh' }} data-corridor="true">
+          <div className="relative" style={{ height: '400vh' }} data-corridor="true">
             <div className="sticky top-0 w-full h-screen overflow-hidden">
               {/* 3D scene — delayed mount so intro overlay always paints first */}
               <div className="absolute inset-0 w-full h-full pointer-events-auto">
@@ -374,15 +408,17 @@ export default function LandingPage() {
                     style={{ opacity: useScrollFade, y: useScrollY }}
                     className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 pointer-events-none z-10"
                   >
-                    <span className="font-mono text-[10px] text-exhibition-gold uppercase tracking-[0.3em] mb-4">
-                      Glimpse of 2024
-                    </span>
-                    <h1 className="editorial-text text-4xl md:text-6xl text-exhibition-bone max-w-2xl font-light">
-                      Hall of Fame
-                    </h1>
-                    <p className="font-sans text-xs text-zinc-500 mt-3 max-w-sm tracking-wide">
-                      Walk through the glimpse of 2024. Click on any frame to inspect the artwork.
-                    </p>
+                    <div className="flex flex-col items-center justify-center p-8 md:p-14 rounded-[2rem] backdrop-blur-md bg-black/30 border border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.6)]">
+                      <span className="font-mono text-xs md:text-sm text-exhibition-gold uppercase tracking-[0.4em] mb-4">
+                        Glimpse of 2024
+                      </span>
+                      <h1 className="editorial-text text-6xl md:text-8xl text-exhibition-bone max-w-2xl font-bold" style={{ textShadow: '0 4px 30px rgba(0,0,0,0.8)' }}>
+                        Hall of Fame
+                      </h1>
+                      <p className="font-sans text-sm md:text-lg text-zinc-200 mt-6 max-w-lg tracking-wide leading-relaxed" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                        Walk through the glimpse of 2024. Click on any frame to inspect the artwork.
+                      </p>
+                    </div>
                     <motion.div
                       animate={{ y: [0, 10, 0] }}
                       transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}

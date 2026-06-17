@@ -4,8 +4,9 @@ import { ArrowLeft, Mail, Lock, CheckCircle, Eye, EyeOff } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { signInWithPopup } from 'firebase/auth'
 import { auth, googleProvider } from '../lib/firebase'
-import { saveSession } from '../lib/session'
+import { saveSession, syncUserProfile } from '../lib/session'
 import ParticleField from '../components/ParticleField'
+import InstagramBrowserWarning from '../components/InstagramBrowserWarning'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
@@ -37,6 +38,7 @@ export default function AuthLoginPage() {
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Google sign-in failed'); setLoading(false); return }
       saveSession(data)
+      syncUserProfile()
       routeAfterAuth(data.profileComplete)
     } catch (e: any) {
       if (e?.code === 'auth/popup-closed-by-user') setError('Sign-in cancelled.')
@@ -58,6 +60,7 @@ export default function AuthLoginPage() {
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Login failed'); setLoading(false); return }
       saveSession(data)
+      syncUserProfile()
       routeAfterAuth(data.profileComplete)
     } catch {
       setError('Cannot reach server.')
@@ -75,6 +78,8 @@ export default function AuthLoginPage() {
             <ArrowLeft size={14} /> Exhibition Hall
           </button>
         </Link>
+
+        <InstagramBrowserWarning />
 
         <AnimatePresence mode="wait">
           {done ? (

@@ -111,15 +111,12 @@ export default function VideoUploader({
     <div className="space-y-6">
       {/* Video Upload */}
       <div>
-        <label className="block font-mono text-xs text-exhibition-gold uppercase tracking-widest mb-3">
+        <label className="block font-mono text-[9px] uppercase tracking-widest text-zinc-400 mb-2">
           Video File (MP4 or MKV) *
         </label>
         
         {!videoFile ? (
-          <div
-            onClick={() => videoInputRef.current?.click()}
-            className="border-2 border-dashed border-exhibition-gold/30 hover:border-exhibition-gold/60 bg-black/20 p-8 rounded-none cursor-pointer transition-colors group"
-          >
+          <label className="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed border-zinc-800 cursor-pointer hover:border-exhibition-gold/50 transition-colors">
             <input
               ref={videoInputRef}
               type="file"
@@ -127,12 +124,10 @@ export default function VideoUploader({
               onChange={handleVideoChange}
               className="hidden"
             />
-            <div className="flex flex-col items-center justify-center text-center">
-              <Film size={48} className="text-exhibition-gold/40 group-hover:text-exhibition-gold/60 transition-colors mb-4" />
-              <p className="font-mono text-sm text-zinc-400 mb-1">Click to upload video</p>
-              <p className="font-mono text-xs text-zinc-600">MP4 or MKV, max 500MB</p>
-            </div>
-          </div>
+            <Film className="w-8 h-8 text-zinc-600 mb-3" />
+            <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-widest">Click to upload video</span>
+            <span className="font-mono text-[8px] text-zinc-600 mt-1">MP4 or MKV · max 500MB</span>
+          </label>
         ) : (
           <div className="border border-exhibition-gold/30 bg-black/40 p-4 rounded-none relative">
             <button
@@ -164,15 +159,17 @@ export default function VideoUploader({
 
       {/* Cover Image Upload */}
       <div>
-        <label className="block font-mono text-xs text-exhibition-gold uppercase tracking-widest mb-3">
-          Cover Image (Thumbnail) *
-        </label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block font-mono text-[9px] uppercase tracking-widest text-zinc-400">
+            Cover Image (Thumbnail) *
+          </label>
+          <span className="text-[9px] font-mono text-exhibition-gold lg:hidden uppercase tracking-widest animate-pulse">
+            ↓ Scroll down for preview ↓
+          </span>
+        </div>
         
         {!coverFile ? (
-          <div
-            onClick={() => coverInputRef.current?.click()}
-            className="border-2 border-dashed border-exhibition-gold/30 hover:border-exhibition-gold/60 bg-black/20 p-8 rounded-none cursor-pointer transition-colors group"
-          >
+          <label className="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed border-zinc-800 cursor-pointer hover:border-exhibition-gold/50 transition-colors">
             <input
               ref={coverInputRef}
               type="file"
@@ -180,12 +177,10 @@ export default function VideoUploader({
               onChange={handleCoverChange}
               className="hidden"
             />
-            <div className="flex flex-col items-center justify-center text-center">
-              <ImageIcon size={48} className="text-exhibition-gold/40 group-hover:text-exhibition-gold/60 transition-colors mb-4" />
-              <p className="font-mono text-sm text-zinc-400 mb-1">Click to upload cover image</p>
-              <p className="font-mono text-xs text-zinc-600">JPG, PNG or WebP, max 10MB</p>
-            </div>
-          </div>
+            <ImageIcon className="w-8 h-8 text-zinc-600 mb-3" />
+            <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-widest">Click to upload cover</span>
+            <span className="font-mono text-[8px] text-zinc-600 mt-1">JPG, PNG or WEBP · max 10MB</span>
+          </label>
         ) : (
           <div className="border border-exhibition-gold/30 bg-black/40 p-4 rounded-none relative">
             <button
@@ -199,7 +194,7 @@ export default function VideoUploader({
               <img
                 src={coverPreview}
                 alt="Cover preview"
-                className="w-full h-48 object-cover bg-black mb-3 relative z-[40]"
+                className="w-full h-48 object-contain bg-black/50 mb-3 relative z-[40]"
               />
             )}
             

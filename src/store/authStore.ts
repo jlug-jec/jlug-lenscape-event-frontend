@@ -10,6 +10,7 @@ export interface AuthUser {
   // profile fields (set after profile setup)
   college?: string
   branch?: string
+  year?: string
   bio?: string
   avatar?: string
   // voting tracking - one vote per category

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { LogOut, School, BookOpen, User, Award, Compass, Rocket, MessageSquare, Crown, Gem, Clock, CheckCircle, XCircle, Star, Medal } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { clearSession, getToken, authHeaders } from '../lib/session'
+import { clearSession, getToken, authHeaders, syncUserProfile } from '../lib/session'
 import { useAuthStore } from '../store/authStore'
 import ExhibitionNav from '../components/ExhibitionNav'
 
@@ -33,11 +33,18 @@ const STATUS_CONFIG = {
 
 function formatDate(raw: any): string {
   if (!raw) return '—'
-  const ms = typeof raw === 'object' && raw._seconds
-    ? raw._seconds * 1000
-    : typeof raw === 'string' || typeof raw === 'number'
-      ? new Date(raw).getTime()
-      : NaN
+  let ms: number
+  if (typeof raw === 'object' && raw._seconds) {
+    // Firestore Timestamp object: { _seconds, _nanoseconds }
+    ms = raw._seconds * 1000
+  } else if (raw instanceof Date) {
+    // Already a JS Date object
+    ms = raw.getTime()
+  } else if (typeof raw === 'string' || typeof raw === 'number') {
+    ms = new Date(raw).getTime()
+  } else {
+    ms = NaN
+  }
   return isNaN(ms) ? '—' : new Date(ms).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
@@ -51,6 +58,7 @@ export default function ProfilePage() {
   const profileComplete = localStorage.getItem('lenscape_profile_complete') === 'true'
   const college       = localStorage.getItem('lenscape_user_college') || ''
   const branch        = localStorage.getItem('lenscape_user_branch') || ''
+  const year          = localStorage.getItem('lenscape_user_year') || ''
   const bio           = localStorage.getItem('lenscape_user_bio') || ''
   const avatar        = localStorage.getItem('lenscape_user_avatar') || `https://api.dicebear.com/7.x/bottts/svg?seed=${userEmail}`
 
@@ -77,6 +85,8 @@ export default function ProfilePage() {
       setLoading(false)
     }
     fetchSubmissions()
+    // Trigger a background sync of the user profile so data is always fresh
+    syncUserProfile()
   }, [token])
 
   const handleLogout = () => { clearSession(); navigate('/') }
@@ -98,57 +108,83 @@ export default function ProfilePage() {
       <ExhibitionNav />
 
       {/* Header */}
-      <div className="relative border-b border-zinc-900/60 bg-black/10 py-24">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center md:items-end justify-between gap-12">
-          <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
-            <div className="w-32 h-32 bg-[#0c0c0c] border border-exhibition-gold p-2 relative flex-shrink-0 shadow-2xl">
-              <img src={avatar} className="w-full h-full object-cover" alt={userName} />
-              <div className="absolute -bottom-2 -right-2 bg-exhibition-gold text-exhibition-void px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase">Active</div>
+      <div className="relative border-b border-zinc-900/60 bg-black/10 pt-24 pb-12">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center md:items-end justify-between gap-12 mb-10">
+            <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
+              <div className="w-32 h-32 bg-[#0c0c0c] border border-exhibition-gold p-2 relative flex-shrink-0 shadow-2xl">
+                <img src={avatar} className="w-full h-full object-cover" alt={userName} />
+                <div className="absolute -bottom-2 -right-2 bg-exhibition-gold text-exhibition-void px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase">Active</div>
+              </div>
+              <div>
+                <span className="font-mono text-[10px] text-exhibition-gold uppercase tracking-[0.3em] block mb-2">Registered Student Artist</span>
+                <h1 className="editorial-text text-5xl md:text-7xl font-light text-exhibition-bone tracking-wide leading-none">{userName}</h1>
+                <p className="text-xs font-mono text-zinc-500 mt-3 max-w-xl italic">
+                  {bio ? `"${bio}"` : `"Exploring new visual dimensions in Lenscape."`}
+                </p>
+              </div>
             </div>
-            <div>
-              <span className="font-mono text-[10px] text-exhibition-gold uppercase tracking-[0.3em] block mb-2">Registered Student Artist</span>
-              <h1 className="editorial-text text-5xl md:text-7xl font-light text-exhibition-bone tracking-wide leading-none">{userName}</h1>
-              <p className="text-xs font-mono text-zinc-500 mt-3 max-w-xl italic">
-                {bio ? `"${bio}"` : `"Exploring new visual dimensions in Lenscape."`}
-              </p>
+            <button onClick={handleLogout} className="px-5 py-2.5 border border-red-500/30 hover:border-red-500 text-red-400 text-xs font-mono uppercase tracking-widest transition-colors flex-shrink-0">
+              Exit Terminal
+            </button>
+          </div>
+          
+          {/* User Info Placard */}
+          <div className="border border-zinc-900/50 bg-[#0a0a0a] p-6 overflow-x-auto whitespace-nowrap w-full mt-10" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex w-full min-w-max">
+              <div className="flex-1 flex flex-col gap-2 pr-8">
+                <div className="flex items-center gap-2">
+                  <School size={12} className="text-exhibition-gold" />
+                  <span className="text-[9px] text-zinc-500 font-mono uppercase tracking-widest">Institution</span>
+                </div>
+                {loadingSubmissions ? (
+                  <div className="h-3.5 w-24 bg-zinc-800/80 animate-pulse rounded" />
+                ) : (
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-exhibition-bone">{user?.college || college || 'Not specified'}</span>
+                )}
+              </div>
+              
+              <div className="flex-1 flex flex-col gap-2 px-8 border-l border-zinc-900/50">
+                <div className="flex items-center gap-2">
+                  <BookOpen size={12} className="text-exhibition-gold" />
+                  <span className="text-[9px] text-zinc-500 font-mono uppercase tracking-widest">Discipline</span>
+                </div>
+                {loadingSubmissions ? (
+                  <div className="h-3.5 w-20 bg-zinc-800/80 animate-pulse rounded" />
+                ) : (
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-exhibition-bone">{user?.branch || branch || 'Not specified'}</span>
+                )}
+              </div>
+              
+              <div className="flex-1 flex flex-col gap-2 px-8 border-l border-zinc-900/50">
+                <div className="flex items-center gap-2">
+                  <Award size={12} className="text-exhibition-gold" />
+                  <span className="text-[9px] text-zinc-500 font-mono uppercase tracking-widest">Year</span>
+                </div>
+                {loadingSubmissions ? (
+                  <div className="h-3.5 w-16 bg-zinc-800/80 animate-pulse rounded" />
+                ) : (
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-exhibition-bone">{(user as any)?.year || year || 'Not specified'}</span>
+                )}
+              </div>
+              
+              <div className="flex-1 flex flex-col gap-2 pl-8 border-l border-zinc-900/50">
+                <div className="flex items-center gap-2">
+                  <User size={12} className="text-exhibition-gold" />
+                  <span className="text-[9px] text-zinc-500 font-mono uppercase tracking-widest">Email</span>
+                </div>
+                {loadingSubmissions ? (
+                  <div className="h-3.5 w-32 bg-zinc-800/80 animate-pulse rounded" />
+                ) : (
+                  <span className="text-[11px] font-mono text-exhibition-bone">{userEmail}</span>
+                )}
+              </div>
             </div>
           </div>
-          <button onClick={handleLogout} className="px-5 py-2.5 border border-red-500/30 hover:border-red-500 text-red-400 text-xs font-mono uppercase tracking-widest transition-colors">
-            Exit Terminal
-          </button>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-6 mt-16">
-
-        {/* Info placard — always show (falls back to email if college/branch not set) */}
-        <div className="border border-zinc-900 p-6 bg-[#0c0c0c] mb-12 flex flex-col md:flex-row gap-8 items-start md:items-center justify-between shadow-lg">
-          {college ? (
-            <div className="flex items-start gap-3">
-              <School size={16} className="text-exhibition-gold mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="text-[8px] text-zinc-500 font-mono block">INSTITUTION</span>
-                <span className="text-xs font-mono uppercase tracking-wider text-exhibition-bone">{college}</span>
-              </div>
-            </div>
-          ) : null}
-          {branch ? (
-            <div className="flex items-start gap-3">
-              <BookOpen size={16} className="text-exhibition-gold mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="text-[8px] text-zinc-500 font-mono block">CREATIVE DISCIPLINE</span>
-                <span className="text-xs font-mono uppercase tracking-wider text-exhibition-bone">{branch}</span>
-              </div>
-            </div>
-          ) : null}
-          <div className="flex items-start gap-3">
-            <User size={16} className="text-exhibition-gold mt-0.5 flex-shrink-0" />
-            <div>
-              <span className="text-[8px] text-zinc-500 font-mono block">EMAIL</span>
-              <span className="text-xs font-mono text-exhibition-bone">{userEmail}</span>
-            </div>
-          </div>
-        </div>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-px bg-zinc-900 border border-zinc-900 mb-12">
@@ -157,8 +193,12 @@ export default function ProfilePage() {
             { label: 'Approved',  value: approved.length },
             { label: 'In Review', value: pending.length },
           ].map(s => (
-            <div key={s.label} className="bg-exhibition-void py-6 text-center">
-              <span className="editorial-text text-4xl font-bold text-exhibition-gold">{s.value}</span>
+            <div key={s.label} className="bg-exhibition-void py-6 text-center flex flex-col items-center justify-center">
+              {loadingSubmissions ? (
+                <div className="h-10 w-12 bg-zinc-800/80 animate-pulse rounded mb-1" />
+              ) : (
+                <span className="editorial-text text-4xl font-bold text-exhibition-gold">{s.value}</span>
+              )}
               <span className="font-mono text-[9px] text-zinc-500 uppercase tracking-widest block mt-1">{s.label}</span>
             </div>
           ))}
@@ -205,11 +245,6 @@ export default function ProfilePage() {
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-zinc-700 font-mono text-xs">No Image</div>
                         )}
-                        {/* Status badge - hidden on small screens */}
-                        <div className={`hidden md:flex absolute top-3 left-3 items-center gap-1.5 border px-2.5 py-1 text-[9px] font-mono uppercase tracking-[0.15em] bg-black/80 backdrop-blur-sm ${cfg.color}`}>
-                          <cfg.Icon size={10} />
-                          {cfg.label}
-                        </div>
                       </div>
 
                       {/* Info */}
@@ -225,12 +260,10 @@ export default function ProfilePage() {
 
                         {/* Date + votes/status row */}
                         <div className="mt-auto flex justify-between items-center pt-3 border-t border-zinc-900 font-mono text-[9px]">
-                          <span className="text-zinc-500">{formatDate(art.createdAt)}</span>
-                          {/* Status badge on mobile, votes/status on desktop */}
+                          <span className="text-zinc-500">{formatDate(art.createdAt) === '—' ? 'Date Unknown' : formatDate(art.createdAt)}</span>
                           <div className="flex items-center gap-1.5">
-                            {/* vote count hidden from regular users */}
-                            {/* Mobile status badge */}
-                            <span className={`md:hidden flex items-center gap-1 border px-2 py-0.5 text-[8px] uppercase tracking-wider ${cfg.color}`}>
+                            {/* Status badge on all screens */}
+                            <span className={`flex items-center gap-1 border px-2 py-0.5 text-[8px] uppercase tracking-wider ${cfg.color}`}>
                               <cfg.Icon size={9} />
                               {cfg.label}
                             </span>

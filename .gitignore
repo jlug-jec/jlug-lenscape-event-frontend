@@ -38,7 +38,3 @@ Thumbs.db
 
 # TypeScript
 *.tsbuildinfo
-
-.env.production
-.env.development
-.env

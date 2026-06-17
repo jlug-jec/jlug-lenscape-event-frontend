@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { authHeaders, verifySession, saveSession, getToken } from '../lib/session'
+import { authHeaders, verifySession, saveSession, syncUserProfile, getToken } from '../lib/session'
 import ParticleField from '../components/ParticleField'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
@@ -62,6 +62,7 @@ export default function ProfileSetupPage() {
         bio,
         avatar,
       })
+      syncUserProfile()
       navigate('/profile')
     } catch {
       setError('Cannot reach server.')
