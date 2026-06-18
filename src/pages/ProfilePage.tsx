@@ -130,9 +130,9 @@ export default function ProfilePage() {
           </div>
           
           {/* User Info Placard */}
-          <div className="border border-zinc-900/50 bg-[#0a0a0a] p-6 overflow-x-auto whitespace-nowrap w-full mt-10" style={{ scrollbarWidth: 'none' }}>
-            <div className="flex w-full min-w-max">
-              <div className="flex-1 flex flex-col gap-2 pr-8">
+          <div className="border border-zinc-900/50 bg-[#0a0a0a] p-6 w-full mt-10">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-zinc-900/50">
+              <div className="flex flex-col gap-2 p-4 bg-[#0a0a0a]">
                 <div className="flex items-center gap-2">
                   <School size={12} className="text-exhibition-gold" />
                   <span className="text-[9px] text-zinc-500 font-mono uppercase tracking-widest">Institution</span>
@@ -143,8 +143,8 @@ export default function ProfilePage() {
                   <span className="text-[11px] font-mono uppercase tracking-wider text-exhibition-bone">{user?.college || college || 'Not specified'}</span>
                 )}
               </div>
-              
-              <div className="flex-1 flex flex-col gap-2 px-8 border-l border-zinc-900/50">
+
+              <div className="flex flex-col gap-2 p-4 bg-[#0a0a0a]">
                 <div className="flex items-center gap-2">
                   <BookOpen size={12} className="text-exhibition-gold" />
                   <span className="text-[9px] text-zinc-500 font-mono uppercase tracking-widest">Discipline</span>
@@ -155,8 +155,8 @@ export default function ProfilePage() {
                   <span className="text-[11px] font-mono uppercase tracking-wider text-exhibition-bone">{user?.branch || branch || 'Not specified'}</span>
                 )}
               </div>
-              
-              <div className="flex-1 flex flex-col gap-2 px-8 border-l border-zinc-900/50">
+
+              <div className="flex flex-col gap-2 p-4 bg-[#0a0a0a]">
                 <div className="flex items-center gap-2">
                   <Award size={12} className="text-exhibition-gold" />
                   <span className="text-[9px] text-zinc-500 font-mono uppercase tracking-widest">Year</span>
@@ -167,8 +167,8 @@ export default function ProfilePage() {
                   <span className="text-[11px] font-mono uppercase tracking-wider text-exhibition-bone">{(user as any)?.year || year || 'Not specified'}</span>
                 )}
               </div>
-              
-              <div className="flex-1 flex flex-col gap-2 pl-8 border-l border-zinc-900/50">
+
+              <div className="flex flex-col gap-2 p-4 bg-[#0a0a0a]">
                 <div className="flex items-center gap-2">
                   <User size={12} className="text-exhibition-gold" />
                   <span className="text-[9px] text-zinc-500 font-mono uppercase tracking-widest">Email</span>
@@ -176,7 +176,7 @@ export default function ProfilePage() {
                 {loadingSubmissions ? (
                   <div className="h-3.5 w-32 bg-zinc-800/80 animate-pulse rounded" />
                 ) : (
-                  <span className="text-[11px] font-mono text-exhibition-bone">{userEmail}</span>
+                  <span className="text-[11px] font-mono text-exhibition-bone break-all">{userEmail}</span>
                 )}
               </div>
             </div>
