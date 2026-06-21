@@ -156,9 +156,11 @@ export default function AdminPage() {
       'Voted Categories':  (u.votedCategories || []).join(', ') || 'None',
       'Votes Cast':        (u.votedCategories || []).length,
       'Joined Date':       (() => {
-                             if (!u.joinedDate) return ''
-                             const ms = u.joinedDate._seconds ? u.joinedDate._seconds * 1000 : new Date(u.joinedDate).getTime()
-                             return isNaN(ms) ? '' : new Date(ms).toLocaleDateString('en-IN')
+                             if (!u.joinedDate) return '';
+                             try {
+                               const d = u.joinedDate._seconds ? new Date(u.joinedDate._seconds * 1000) : new Date(typeof u.joinedDate === 'string' ? u.joinedDate.split('.')[0] + 'Z' : u.joinedDate);
+                               return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-IN');
+                             } catch (e) { return ''; }
                            })(),
     }))
     const wsUsers = XLSX.utils.json_to_sheet(usersData)
@@ -179,16 +181,20 @@ export default function AdminPage() {
       'Year':           a.artist?.year || '',
       'Votes':          a.votes ?? '',
       'Has Image':      a.imageUrl ? 'Yes' : 'No',
+      'Image URL':      a.imageUrl || '',
       'Has Video':      a.videoUrl ? 'Yes' : 'No',
+      'Video URL':      a.videoUrl || '',
       'Rejection Note': a.rejectionReason || '',
       'Submitted':      (() => {
-                          if (!a.createdAt) return ''
-                          const ms = a.createdAt._seconds ? a.createdAt._seconds * 1000 : new Date(a.createdAt).getTime()
-                          return isNaN(ms) ? '' : new Date(ms).toLocaleDateString('en-IN')
+                          if (!a.createdAt) return '';
+                          try {
+                            const d = a.createdAt._seconds ? new Date(a.createdAt._seconds * 1000) : new Date(typeof a.createdAt === 'string' ? a.createdAt.split('.')[0] + 'Z' : a.createdAt);
+                            return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-IN');
+                          } catch (e) { return ''; }
                         })(),
     }))
     const wsArtworks = XLSX.utils.json_to_sheet(artworksData)
-    wsArtworks['!cols'] = [30, 16, 18, 10, 25, 30, 25, 20, 8, 8, 10, 10, 30, 15].map(w => ({ wch: w }))
+    wsArtworks['!cols'] = [30, 16, 18, 10, 25, 30, 25, 20, 8, 8, 10, 50, 10, 50, 30, 15].map(w => ({ wch: w }))
     XLSX.utils.book_append_sheet(wb, wsArtworks, 'Artworks')
 
     // ── Sheet 3: Votes Summary (per category) ────────────────────────────────
