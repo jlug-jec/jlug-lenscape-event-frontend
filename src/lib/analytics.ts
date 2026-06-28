@@ -15,6 +15,24 @@ function canTrack() {
   return typeof window !== 'undefined' && Boolean(GA_MEASUREMENT_ID);
 }
 
+function pageTitleForPath(path: string) {
+  const pathname = path.split(/[?#]/)[0] || '/';
+  const titles: Record<string, string> = {
+    '/': 'Lenscape | Home',
+    '/gallery': 'Lenscape | Gallery',
+    '/submit': 'Lenscape | Submit Artwork',
+    '/profile': 'Lenscape | Profile',
+    '/profile/setup': 'Lenscape | Profile Setup',
+    '/auth/login': 'Lenscape | Login',
+    '/auth/signup': 'Lenscape | Sign Up',
+    '/admin': 'Lenscape | Admin',
+    '/admin/login': 'Lenscape | Admin Login',
+    '/admin/signup': 'Lenscape | Admin Sign Up',
+  };
+
+  return titles[pathname] || 'Lenscape | Digital Art Exhibition';
+}
+
 export function initAnalytics() {
   if (!canTrack() || window.__lenscapeAnalyticsInitialized) return;
 
@@ -38,7 +56,7 @@ export function trackPageView(path: string) {
 
   initAnalytics();
   window.gtag?.('event', 'page_view', {
-    page_title: document.title,
+    page_title: pageTitleForPath(path),
     page_location: window.location.href,
     page_path: path,
   });
