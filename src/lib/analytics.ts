@@ -43,3 +43,10 @@ export function trackPageView(path: string) {
     page_path: path,
   });
 }
+
+export function trackEvent(name: string, params: Record<string, unknown> = {}) {
+  if (!canTrack()) return;
+
+  initAnalytics();
+  window.gtag?.('event', name, params);
+}

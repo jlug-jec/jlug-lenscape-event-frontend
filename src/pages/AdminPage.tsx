@@ -66,7 +66,7 @@ export default function AdminPage() {
   }
 
   const fetchApproved = async () => {
-    const res = await fetch(`${API}/api/artworks`, { headers: authHeaders() })
+    const res = await fetch(`${API}/api/admin/artworks`, { headers: authHeaders() })
     if (res.ok) {
       const data = await res.json()
       setApprovedArtworks(data)

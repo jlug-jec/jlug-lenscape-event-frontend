@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, AlertTriangle, Sparkles, UploadCloud, X } from 'lucide-react'
 import ExhibitionNav from '../components/ExhibitionNav'
 import VideoUploader from '../components/VideoUploader'
 import { authHeaders, getToken } from '../lib/session'
+import { trackEvent } from '../lib/analytics'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
@@ -27,6 +28,7 @@ export default function SubmitPage() {
   const navigate = useNavigate()
   const token = getToken()
   const profileComplete = localStorage.getItem('lenscape_profile_complete') === 'true'
+  const formStartedRef = useRef(false)
 
   const [title, setTitle]             = useState('')
   const [description, setDescription] = useState('')
@@ -45,7 +47,19 @@ export default function SubmitPage() {
   // Check if current category requires video upload
   const isVideoCategory = category === 'cinematography' || category === 'motion-graphics'
 
+  const trackFormStart = (source: string, nextCategory = category) => {
+    if (formStartedRef.current) return
+    formStartedRef.current = true
+    const nextIsVideoCategory = nextCategory === 'cinematography' || nextCategory === 'motion-graphics'
+    trackEvent('artwork_form_start', {
+      source,
+      category: nextCategory,
+      is_video_category: nextIsVideoCategory,
+    })
+  }
+
   const handleCategoryChange = (id: string) => {
+    trackFormStart('category', id)
     setCategory(id)
     const cat = EVENT_CATEGORIES.find(c => c.id === id)
     if (cat) setSubcategory(cat.subcategories[0])
@@ -64,6 +78,7 @@ export default function SubmitPage() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    trackFormStart('cover_image')
     setError('')
     setImagePreview(URL.createObjectURL(file))
     await uploadToCloudinary(file)
@@ -99,8 +114,20 @@ export default function SubmitPage() {
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    trackEvent('artwork_submit_attempt', {
+      category,
+      subcategory,
+      orientation,
+      is_video_category: isVideoCategory,
+      has_cover_image: Boolean(uploadedUrl || coverFile),
+      has_video_file: Boolean(videoFile),
+    })
     
     if (!title.trim() || !description.trim()) { 
+      trackEvent('artwork_submit_validation_failed', {
+        category,
+        reason: 'missing_title_or_description',
+      })
       setError('Title and description are required.'); 
       return 
     }
@@ -108,6 +135,10 @@ export default function SubmitPage() {
     // Check if video category requires video files
     if (isVideoCategory) {
       if (!videoFile || !coverFile) {
+        trackEvent('artwork_submit_validation_failed', {
+          category,
+          reason: 'missing_video_or_cover',
+        })
         setError('Both video file and cover image are required for video categories.')
         return
       }
@@ -115,6 +146,10 @@ export default function SubmitPage() {
     } else {
       // Regular image submission
       if (!uploadedUrl) {
+        trackEvent('artwork_submit_validation_failed', {
+          category,
+          reason: 'missing_cover_image',
+        })
         setError('Please upload a cover image.')
         return
       }
@@ -146,14 +181,28 @@ export default function SubmitPage() {
       const data = await res.json()
       
       if (!res.ok) {
+        trackEvent('artwork_submit_failed', {
+          category,
+          type: 'video',
+          status: res.status,
+        })
         setError(data.error || 'Video submission failed')
         setSubmitting(false)
         return
       }
       
+      trackEvent('artwork_submit_success', {
+        category,
+        type: 'video',
+      })
       setSuccess(true)
       setTimeout(() => navigate('/profile'), 1500)
     } catch (err) {
+      trackEvent('artwork_submit_failed', {
+        category,
+        type: 'video',
+        status: 'network',
+      })
       setError('Cannot reach server. Please check your connection.')
     }
     
@@ -181,14 +230,28 @@ export default function SubmitPage() {
       const data = await res.json()
       
       if (!res.ok) { 
+        trackEvent('artwork_submit_failed', {
+          category,
+          type: 'image',
+          status: res.status,
+        })
         setError(data.error || 'Submission failed'); 
         setSubmitting(false); 
         return 
       }
       
+      trackEvent('artwork_submit_success', {
+        category,
+        type: 'image',
+      })
       setSuccess(true)
       setTimeout(() => navigate('/profile'), 1500)
     } catch {
+      trackEvent('artwork_submit_failed', {
+        category,
+        type: 'image',
+        status: 'network',
+      })
       setError('Cannot reach server.')
     }
     
@@ -249,7 +312,7 @@ export default function SubmitPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           {/* ── Form ── */}
           <div className="lg:col-span-7 bg-[#0c0c0c] border border-zinc-900 p-8">
-            <form onSubmit={handleFormSubmit} className="space-y-6">
+            <form onChange={() => trackFormStart('field')} onSubmit={handleFormSubmit} className="space-y-6">
 
               {/* Title */}
               <div>
