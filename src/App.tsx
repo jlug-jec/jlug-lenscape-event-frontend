@@ -10,6 +10,7 @@ import AdminLoginPage from './pages/AdminLoginPage'
 import AdminSignupPage from './pages/AdminSignupPage'
 import SubmitPage from './pages/SubmitPage'
 import SmoothScroll from './components/SmoothScroll'
+import RouteAnalytics from './components/RouteAnalytics'
 import { AppProvider } from './context/AppContext'
 import GrainOverlay from './components/GrainOverlay'
 
@@ -18,6 +19,7 @@ function App() {
     <AppProvider>
       <Router>
         <GrainOverlay />
+        <RouteAnalytics />
         <SmoothScroll>
           <Routes>
             <Route path="/" element={<LandingPage />} />
