@@ -8,6 +8,8 @@ import { Artwork } from '../types'
 import CinematicIntro from '../components/CinematicIntro'
 import ExhibitionNav from '../components/ExhibitionNav'
 import ThreeExhibitionScene from '../components/ThreeExhibitionScene'
+import EventEndedRibbon from '../components/EventEndedRibbon'
+import { useEventSettings } from '../hooks/useEventSettings'
 import ArtworkFrame from '../components/ArtworkFrame'
 import { useSpotlightAll } from '../hooks/useSpotlight'
 import ArtworkViewerModal from '../components/UI/ArtworkViewerModal'
@@ -21,6 +23,7 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 export default function LandingPage() {
   const user = useAuthStore(s => s.user)
   const navigate = useNavigate()
+  const { settings: eventSettings } = useEventSettings()
   
   useSpotlightAll('.spot-md, .spot-lg, .spot-xl')
 
@@ -375,6 +378,9 @@ export default function LandingPage() {
           {/* Navigation Guide */}
           <ExhibitionNav isVisible={showNav} />
 
+          {/* Event Ended Ribbon — shows once submissions close, independent of the voting toggle */}
+          {!eventSettings.submissionsEnabled && <EventEndedRibbon />}
+
           {/* 
             Scroll-jacked 3D corridor.
             The outer div is 400vh tall — this is the "scroll budget" for the camera walk.
@@ -574,6 +580,37 @@ export default function LandingPage() {
               </div>
             </section>
 
+            {/* Section: Event Ended — grand closing announcement */}
+            {!eventSettings.submissionsEnabled && (
+              <section className="max-w-4xl mx-auto mb-32">
+                <div className="border border-exhibition-gold/30 bg-black/50 p-12 md:p-20 text-center relative overflow-hidden">
+                  {['top-3 left-3', 'top-3 right-3', 'bottom-3 left-3', 'bottom-3 right-3'].map(p => (
+                    <div key={p} className={`absolute ${p} w-2 h-2 bg-exhibition-gold/40 rounded-full`} />
+                  ))}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-b from-exhibition-gold/10 to-transparent blur-3xl rounded-full pointer-events-none -z-10" />
+
+                  <span className="font-mono text-xs md:text-sm text-exhibition-gold uppercase tracking-[0.35em] block mb-6">
+                    Lenscape 2026
+                  </span>
+                  <h2 className="editorial-text text-5xl md:text-7xl font-light text-exhibition-bone mb-6">
+                    The Gallery Has Closed Its Doors
+                  </h2>
+                  <p className="text-sm md:text-base text-zinc-400 font-mono max-w-xl mx-auto leading-relaxed mb-4">
+                    Every submission now rests in the corridor, awaiting judgment. The curators have retired to deliberate — winners will be unveiled soon.
+                  </p>
+                  <p className="text-xs md:text-sm text-exhibition-gold/80 font-mono italic max-w-xl mx-auto leading-relaxed mb-10">
+                    To every artist who lent their vision to these walls — thank you for making this exhibition unforgettable.
+                  </p>
+                  <button
+                    onClick={() => navigate('/gallery')}
+                    className="px-10 py-4 bg-exhibition-gold text-exhibition-void font-mono font-bold text-xs md:text-sm uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
+                  >
+                    View Exhibition
+                  </button>
+                </div>
+              </section>
+            )}
+
             {/* Section: Exhibition Rooms CTA */}
             <section ref={chambersRef} className="max-w-5xl mx-auto mb-32">
               <div className="text-center mb-20">
@@ -663,25 +700,42 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Submit portal callout */}
-              <div className="mt-16 border border-exhibition-gold/25 p-10 bg-black/60 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                <div>
-                  <h4 className="editorial-text text-xl font-bold text-exhibition-gold">
-                    Have your artwork shown in the corridor?
-                  </h4>
-                  <p className="text-xs text-zinc-400 font-mono mt-1">
-                    Submit your creations to be curated and voted on by peers.
-                  </p>
+              {/* Submit portal callout — only shown while submissions are open */}
+              {eventSettings.submissionsEnabled && (
+                <div className="mt-16 border border-exhibition-gold/25 p-10 bg-black/60 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                  <div>
+                    <h4 className="editorial-text text-xl font-bold text-exhibition-gold">
+                      Have your artwork shown in the corridor?
+                    </h4>
+                    <p className="text-xs text-zinc-400 font-mono mt-1">
+                      Submit your creations to be curated and voted on by peers.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => navigate('/submit')}
+                    className="px-6 py-3 bg-exhibition-gold text-exhibition-void font-mono font-bold text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors self-start md:self-auto"
+                  >
+                    Add Your Canvas
+                  </button>
                 </div>
-                <button
-                  onClick={() => navigate('/submit')}
-                  className="px-6 py-3 bg-exhibition-gold text-exhibition-void font-mono font-bold text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors self-start md:self-auto"
-                >
-                  Add Your Canvas
-                </button>
-              </div>
+              )}
             </section>
 
+
+            {/* A note of thanks — closing curtain call for participants */}
+            {!eventSettings.submissionsEnabled && (
+              <section className="max-w-3xl mx-auto mb-24 text-center">
+                <span className="font-mono text-[10px] text-exhibition-gold uppercase tracking-[0.3em] block mb-4">
+                  A Note From The Curators
+                </span>
+                <p className="editorial-text text-xl md:text-2xl font-light text-exhibition-bone/90 leading-relaxed italic">
+                  "Thank you for walking these halls with us — for every frame captured, every story told, and every risk taken behind the lens. This exhibition exists because of you."
+                </p>
+                <span className="font-mono text-[9px] text-zinc-500 uppercase tracking-widest block mt-6">
+                  — Team Lenscape × JLUG
+                </span>
+              </section>
+            )}
 
             {/* Footer */}
             <footer className="max-w-6xl mx-auto border-t border-zinc-900 pt-16 flex flex-col md:flex-row justify-between items-center gap-6">

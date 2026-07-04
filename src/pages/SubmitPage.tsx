@@ -1,10 +1,11 @@
 import React, { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, AlertTriangle, Sparkles, UploadCloud, X } from 'lucide-react'
+import { ArrowLeft, AlertTriangle, Sparkles, UploadCloud, X, Clock } from 'lucide-react'
 import ExhibitionNav from '../components/ExhibitionNav'
 import VideoUploader from '../components/VideoUploader'
 import { authHeaders, getToken } from '../lib/session'
 import { trackEvent } from '../lib/analytics'
+import { useEventSettings } from '../hooks/useEventSettings'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
@@ -29,6 +30,7 @@ export default function SubmitPage() {
   const token = getToken()
   const profileComplete = localStorage.getItem('lenscape_profile_complete') === 'true'
   const formStartedRef = useRef(false)
+  const { settings: eventSettings, loading: eventSettingsLoading } = useEventSettings()
 
   const [title, setTitle]             = useState('')
   const [description, setDescription] = useState('')
@@ -256,6 +258,41 @@ export default function SubmitPage() {
     }
     
     setSubmitting(false)
+  }
+
+  // Wait for the event settings to load before deciding which gate to show —
+  // avoids briefly flashing the sign-in/form screen before the "closed" card.
+  if (eventSettingsLoading) {
+    return (
+      <div className="min-h-screen bg-exhibition-void text-exhibition-bone flex items-center justify-center p-6">
+        <div className="w-8 h-8 border border-exhibition-gold/30 border-t-exhibition-gold rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  // Event-ended state takes priority over auth — everyone (signed in or not)
+  // should see this instead of a sign-in prompt once submissions are closed.
+  if (!eventSettings.submissionsEnabled) {
+    return (
+      <div className="min-h-screen bg-exhibition-void text-exhibition-bone flex items-center justify-center p-6">
+        <ExhibitionNav />
+        <div className="max-w-md w-full bg-[#0d0d0d] border border-exhibition-gold/20 p-10 text-center relative">
+          {['top-2 left-2','top-2 right-2','bottom-2 left-2','bottom-2 right-2'].map(p => (
+            <div key={p} className={`absolute ${p} w-1.5 h-1.5 bg-exhibition-gold/30 rounded-full`} />
+          ))}
+          <Clock className="w-12 h-12 text-exhibition-gold mx-auto mb-6" />
+          <h2 className="editorial-text text-3xl font-light mb-3">The Corridor Is Sealed</h2>
+          <p className="text-xs font-mono text-zinc-500 mb-8 leading-relaxed">
+            Curation has closed for Lenscape 2026. Thank you for sharing your vision with us — results will be announced soon.
+          </p>
+          <Link to="/gallery">
+            <button className="w-full py-3 bg-exhibition-gold text-exhibition-void font-mono text-xs uppercase font-bold tracking-widest hover:bg-white hover:text-black transition-colors">
+              View Exhibition
+            </button>
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   if (!token) {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ShieldCheck, Users, UploadCloud, CheckCircle, Ban, TrendingUp, LogOut, Eye, Download } from 'lucide-react'
+import { ShieldCheck, Users, UploadCloud, CheckCircle, Ban, TrendingUp, LogOut, Eye, Download, Heart, Settings } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import * as XLSX from 'xlsx'
 
@@ -25,6 +25,11 @@ export default function AdminPage() {
   const [rejecting, setRejecting] = useState<string | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const [previewArtwork, setPreviewArtwork] = useState<any | null>(null)
+
+  // ── Event Controls (submissions / voting toggles) ────────────────────────────
+  const [eventSettings, setEventSettings] = useState({ submissionsEnabled: false, votingEnabled: true })
+  const [settingsLoading, setSettingsLoading] = useState(true)
+  const [settingsSaving, setSettingsSaving] = useState<'submissions' | 'voting' | null>(null)
 
   // ── Verify admin token on mount ──────────────────────────────────────────────
   useEffect(() => {
@@ -54,7 +59,49 @@ export default function AdminPage() {
     fetchApproved()
     fetchRejected()
     fetchUsers()
+    fetchSettings()
   }, [checking])
+
+  const fetchSettings = async () => {
+    setSettingsLoading(true)
+    try {
+      const res = await fetch(`${API}/api/admin/settings`, { headers: authHeaders() })
+      if (res.ok) {
+        const data = await res.json()
+        setEventSettings({
+          submissionsEnabled: Boolean(data.submissionsEnabled),
+          votingEnabled: Boolean(data.votingEnabled),
+        })
+      }
+    } catch {}
+    setSettingsLoading(false)
+  }
+
+  const toggleSubmissions = async () => {
+    const next = !eventSettings.submissionsEnabled
+    setSettingsSaving('submissions')
+    try {
+      const res = await fetch(`${API}/api/admin/settings`, {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ submissionsEnabled: next }),
+      })
+      if (res.ok) setEventSettings(prev => ({ ...prev, submissionsEnabled: next }))
+    } catch {}
+    setSettingsSaving(null)
+  }
+
+  const toggleVoting = async () => {
+    const next = !eventSettings.votingEnabled
+    setSettingsSaving('voting')
+    try {
+      const res = await fetch(`${API}/api/admin/settings`, {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ votingEnabled: next }),
+      })
+      if (res.ok) setEventSettings(prev => ({ ...prev, votingEnabled: next }))
+    } catch {}
+    setSettingsSaving(null)
+  }
 
   const fetchPending = async () => {
     const res = await fetch(`${API}/api/artworks/pending`, { headers: authHeaders() })
@@ -300,6 +347,74 @@ export default function AdminPage() {
               <Icon className={`w-7 h-7 ${color}`} />
             </div>
           ))}
+        </div>
+
+        {/* Event Controls */}
+        <div className="border border-zinc-900 bg-[#0c0c0c] p-5 mb-10">
+          <div className="flex items-center gap-2 mb-4">
+            <Settings size={14} className="text-exhibition-gold" />
+            <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-widest">Event Controls</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Submissions toggle */}
+            <div className="flex items-center justify-between border border-zinc-800 px-4 py-3">
+              <div className="flex items-center gap-3">
+                <UploadCloud size={16} className={eventSettings.submissionsEnabled ? 'text-emerald-400' : 'text-zinc-500'} />
+                <div>
+                  <span className="font-mono text-xs text-exhibition-bone block">Submissions</span>
+                  <span className={`font-mono text-[9px] uppercase tracking-widest ${eventSettings.submissionsEnabled ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                    {settingsLoading ? 'Loading…' : eventSettings.submissionsEnabled ? 'Open' : 'Closed'}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={toggleSubmissions}
+                disabled={settingsLoading || settingsSaving === 'submissions'}
+                aria-pressed={eventSettings.submissionsEnabled}
+                aria-label="Toggle submissions open or closed"
+                className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 disabled:opacity-50 ${
+                  eventSettings.submissionsEnabled ? 'bg-emerald-500/70' : 'bg-zinc-700'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                    eventSettings.submissionsEnabled ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Voting toggle */}
+            <div className="flex items-center justify-between border border-zinc-800 px-4 py-3">
+              <div className="flex items-center gap-3">
+                <Heart size={16} className={eventSettings.votingEnabled ? 'text-emerald-400' : 'text-zinc-500'} />
+                <div>
+                  <span className="font-mono text-xs text-exhibition-bone block">Voting</span>
+                  <span className={`font-mono text-[9px] uppercase tracking-widest ${eventSettings.votingEnabled ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                    {settingsLoading ? 'Loading…' : eventSettings.votingEnabled ? 'Open' : 'Closed'}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={toggleVoting}
+                disabled={settingsLoading || settingsSaving === 'voting'}
+                aria-pressed={eventSettings.votingEnabled}
+                aria-label="Toggle voting open or closed"
+                className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 disabled:opacity-50 ${
+                  eventSettings.votingEnabled ? 'bg-emerald-500/70' : 'bg-zinc-700'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                    eventSettings.votingEnabled ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+          <p className="font-mono text-[9px] text-zinc-600 mt-4 leading-relaxed">
+            Closing voting shows "event has ended" messaging on the exhibition and gallery pages. Closing submissions blocks new artwork uploads.
+          </p>
         </div>
 
         {/* Tabs */}

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { LogOut, School, BookOpen, User, Award, Compass, Rocket, MessageSquare, Crown, Gem, Clock, CheckCircle, XCircle, Star, Medal } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { clearSession, getToken, authHeaders, syncUserProfile } from '../lib/session'
 import { useAuthStore } from '../store/authStore'
 import ExhibitionNav from '../components/ExhibitionNav'
+import { useEventSettings } from '../hooks/useEventSettings'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
@@ -51,6 +52,7 @@ function formatDate(raw: any): string {
 export default function ProfilePage() {
   const navigate = useNavigate()
   const user = useAuthStore(s => s.user)
+  const { settings: eventSettings } = useEventSettings()
 
   const token         = getToken()
   const userName      = localStorage.getItem('lenscape_user_name') || ''
@@ -222,12 +224,7 @@ export default function ProfilePage() {
             ) : submissions.length === 0 ? (
               <div className="text-center py-20 border border-zinc-900 bg-black/10">
                 <Compass className="w-8 h-8 text-zinc-700 mx-auto mb-4" />
-                <p className="font-mono text-xs uppercase tracking-widest text-zinc-500 mb-6">No artworks submitted yet</p>
-                <Link to="/submit">
-                  <button className="px-6 py-2.5 bg-exhibition-gold text-exhibition-void font-mono text-xs uppercase font-bold tracking-widest hover:bg-white transition-colors">
-                    Submit Your Artwork
-                  </button>
-                </Link>
+                <p className="font-mono text-xs uppercase tracking-widest text-zinc-500">No artworks submitted</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -281,15 +278,22 @@ export default function ProfilePage() {
                 })}
               </div>
             )}
-            {submissions.length > 0 && (
-              <div className="mt-10 text-center">
-                <Link to="/submit">
-                  <button className="px-8 py-3 bg-exhibition-gold text-exhibition-void font-mono text-xs uppercase font-bold tracking-widest hover:bg-white transition-colors">
-                    Submit Another Artwork
-                  </button>
-                </Link>
-              </div>
-            )}
+          </div>
+        )}
+
+        {/* A note of thanks — shown once the exhibition has closed, only for artists who submitted */}
+        {!eventSettings.submissionsEnabled && submissions.length > 0 && (
+          <div className="mt-16 border border-exhibition-gold/20 bg-black/30 p-10 md:p-12 text-center relative overflow-hidden">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-to-b from-exhibition-gold/10 to-transparent blur-3xl rounded-full pointer-events-none -z-10" />
+            <span className="font-mono text-[9px] text-exhibition-gold uppercase tracking-[0.3em] block mb-4">
+              A Note From The Curators
+            </span>
+            <p className="editorial-text text-lg md:text-xl font-light text-exhibition-bone/90 leading-relaxed italic max-w-xl mx-auto">
+              "Thank you for lending your work to these walls, {userName.split(' ')[0] || 'artist'}. Every submission you made helped shape this exhibition — the results are on their way soon."
+            </p>
+            <span className="font-mono text-[9px] text-zinc-500 uppercase tracking-widest block mt-6">
+              — Team Lenscape × JLUG
+            </span>
           </div>
         )}
 

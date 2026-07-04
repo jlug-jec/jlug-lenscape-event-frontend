@@ -6,6 +6,8 @@ import { useAuthStore } from '../store/authStore'
 import { authHeaders } from '../lib/session'
 import ArtworkFrame from '../components/ArtworkFrame'
 import ExhibitionNav from '../components/ExhibitionNav'
+import EventEndedRibbon from '../components/EventEndedRibbon'
+import { useEventSettings } from '../hooks/useEventSettings'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
@@ -20,6 +22,7 @@ interface Artwork {
 export default function GalleryPage() {
   const user = useAuthStore(s => s.user)
   const [searchParams] = useSearchParams()
+  const { settings: eventSettings } = useEventSettings()
 
   const categories = ['photography', 'digital-art', 'cinematography', 'motion-graphics'] as const
   type EventCategory = typeof categories[number]
@@ -142,7 +145,7 @@ export default function GalleryPage() {
 
   // Handle vote button click - show confirmation or warning
   const handleVoteClick = () => {
-    if (!user || !selectedArtwork) return
+    if (!user || !selectedArtwork || !eventSettings.votingEnabled) return
     // Check if user has already voted in this category
     const category = selectedArtwork.category
     if (user.votedCategories && user.votedCategories.includes(category)) {
@@ -222,6 +225,9 @@ export default function GalleryPage() {
       {/* Navigation Guide */}
       <ExhibitionNav />
 
+      {/* Event Ended Ribbon — shows once submissions close, independent of the voting toggle */}
+      {!eventSettings.submissionsEnabled && <EventEndedRibbon />}
+
       {/* Header Room Banner */}
       <div className="pt-24 pb-16 px-6 md:px-12 max-w-6xl mx-auto flex flex-col items-center text-center relative">
         <div
@@ -245,8 +251,8 @@ export default function GalleryPage() {
         </p>
       </div>
 
-      {/* Room-Switch Nav */}
-      <div className="w-full border-t border-b border-zinc-900 bg-black/25 backdrop-blur-md sticky top-0 z-50">
+      {/* Room-Switch Nav — offset below the mobile "event ended" bar so it isn't covered when stuck to the top */}
+      <div className={`w-full border-t border-b border-zinc-900 bg-black/25 backdrop-blur-md sticky z-50 ${!eventSettings.submissionsEnabled ? 'top-9 md:top-0' : 'top-0'}`}>
         <div className="relative">
           {/* Left fade for mobile */}
           <div className="pointer-events-none absolute left-0 top-0 h-full w-8 bg-gradient-to-r from-black/80 to-transparent z-10 md:hidden" />
@@ -429,7 +435,9 @@ export default function GalleryPage() {
                     <span className="text-zinc-500 text-xs font-mono">
                       Exhibition Voting
                     </span>
-                    {user ? (
+                    {!eventSettings.votingEnabled ? (
+                      <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider">Voting Closed</span>
+                    ) : user ? (
                       <div className="relative group">
                         <button
                           onClick={handleVoteClick}
