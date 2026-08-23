@@ -125,133 +125,137 @@ export default function LandingPage() {
   // Filter approved artworks
   const approvedArtworks = artworks.filter((a) => a.status === 'approved')
   
-  // Lenscape 2024 Hall of Fame Winners (uploaded to Cloudinary)
+  // Featured works from Lenscape 2026 — the artworks hung in the 3D corridor.
+  // These mirror real approved submissions (highest-voted image entry per
+  // featured artist); the URLs point at the live Cloudinary account.
   const lenscape2025Winners: Artwork[] = [
     {
-      id: 'winner-photo-2025',
-      title: 'Your CSE Journey Begins Here',
-      category: 'digital-art',
-      subCategory: 'concept-art',
-      artist: { 
-        id: 'gupta-squad',
-        name: 'Gupta squad', 
+      id: '0PLBgs3AyMDnvvJdxa9Z',
+      title: 'Jesus',
+      category: 'photography',
+      subCategory: 'portrait-photography',
+      artist: {
+        id: 'akshat',
+        name: 'Akshat',
         email: '',
-        college: 'Lenscape 2024',
+        college: 'Jabalpur Engineering College',
         branch: '',
         year: '',
         avatar: null,
         bio: '',
-        joinedDate: new Date('2024-10-26')
+        joinedDate: new Date('2026-06-01'),
       },
-      votes: 30,
-      imageUrl: 'https://res.cloudinary.com/dsjhcv06g/image/upload/v1781086583/lenscape/winners2025/photography-winner.jpg',
+      votes: 4,
+      imageUrl: 'https://res.cloudinary.com/dpnbjyxsc/image/upload/v1787499993/lenscape/gallery/kdlxonabsrq8auzngeeg.jpg',
       thumbnailUrl: null,
       videoUrl: null,
-      description: 'Digital Art Domain | 30 votes',
+      description: 'Walking on water',
       status: 'approved' as const,
       comments: [],
-      createdAt: new Date('2024-10-26'),
+      createdAt: new Date('2026-06-01'),
     },
     {
-      id: 'winner-photo-sunscape-2025',
-      title: 'A close-up view of water flowing through loose, muddy soil, capturing the effects of erosion.',
+      id: 'BHroF1nqiS2YgTtSNGUj',
+      title: 'Ctrl + genZ',
+      category: 'photography',
+      subCategory: 'portrait-photography',
+      artist: {
+        id: 'uma-tiwari',
+        name: 'Uma Tiwari',
+        email: '',
+        college: 'Jabalpur Engineering College',
+        branch: '',
+        year: '',
+        avatar: null,
+        bio: '',
+        joinedDate: new Date('2026-06-01'),
+      },
+      votes: 12,
+      imageUrl: 'https://res.cloudinary.com/dpnbjyxsc/image/upload/v1787500162/lenscape/gallery/ndaly53vfba9z3qoq9wg.jpg',
+      thumbnailUrl: null,
+      videoUrl: null,
+      description: 'Behind the Mask',
+      status: 'approved' as const,
+      comments: [],
+      createdAt: new Date('2026-06-01'),
+    },
+    {
+      id: '3z2MCdt8EXMGGQrHYb4A',
+      title: 'Portrait of Resilience',
+      category: 'photography',
+      subCategory: 'portrait-photography',
+      artist: {
+        id: 'mohammad-haris',
+        name: 'Mohammad Haris',
+        email: '',
+        college: 'Jabalpur Engineering College',
+        branch: '',
+        year: '',
+        avatar: null,
+        bio: '',
+        joinedDate: new Date('2026-06-01'),
+      },
+      votes: 4,
+      imageUrl: 'https://res.cloudinary.com/dpnbjyxsc/image/upload/v1787500017/lenscape/gallery/wzf6yugcng74qthxtrgw.jpg',
+      thumbnailUrl: null,
+      videoUrl: null,
+      description: 'The camera arrived late. The story didn\'t. By the time I met his eyes, time had already left its signature. I only borrowed a single frame from a life that kept moving after I walked away.',
+      status: 'approved' as const,
+      comments: [],
+      createdAt: new Date('2026-06-01'),
+    },
+    {
+      id: '2npVd7hLPk6YXgzPT4lB',
+      title: 'The Offsprings',
+      category: 'photography',
+      subCategory: 'portrait-photography',
+      artist: {
+        id: 'zia',
+        name: 'Zia',
+        email: '',
+        college: 'BGIEM',
+        branch: '',
+        year: '',
+        avatar: null,
+        bio: '',
+        joinedDate: new Date('2026-06-01'),
+      },
+      votes: 1,
+      imageUrl: 'https://res.cloudinary.com/dpnbjyxsc/image/upload/v1787500007/lenscape/gallery/fvjtobulzvmp9k4l3k5u.jpg',
+      thumbnailUrl: null,
+      videoUrl: null,
+      description: 'A beginning of new phase this summer, the trees begin to bloom and produce sweet fruits. Captures the beautiful phase of life.',
+      status: 'approved' as const,
+      comments: [],
+      createdAt: new Date('2026-06-01'),
+    },
+    {
+      // Source file is HEIC, which browsers cannot decode — f_auto makes
+      // Cloudinary transcode it to webp/jpeg on delivery.
+      id: 'QzaLJkQCAioiGuEQgALa',
+      title: 'Nature',
       category: 'photography',
       subCategory: 'landscape-photography',
-      artist: { 
-        id: 'sunscape',
-        name: 'Sunscape', 
+      artist: {
+        id: 'vedant',
+        name: 'Vedant',
         email: '',
-        college: 'Lenscape 2024',
+        college: 'Jabalpur Engineering College',
         branch: '',
         year: '',
         avatar: null,
         bio: '',
-        joinedDate: new Date('2024-10-25')
+        joinedDate: new Date('2026-06-01'),
       },
-      votes: 38,
-      imageUrl: 'https://res.cloudinary.com/dsjhcv06g/image/upload/v1781087869/lenscape/winners2025/photography-sunscape.jpg',
+      votes: 0,
+      imageUrl: 'https://res.cloudinary.com/dpnbjyxsc/image/upload/f_auto,q_auto/v1787500387/lenscape/gallery/u6x3knxgk0a0fwnnq1ks.heic',
       thumbnailUrl: null,
       videoUrl: null,
-      description: 'A close-up view of water flowing through loose, muddy soil, capturing the effects of erosion.',
+      description: 'Summer morning',
       status: 'approved' as const,
       comments: [],
-      createdAt: new Date('2024-10-25'),
+      createdAt: new Date('2026-06-01'),
     },
-    {
-      id: 'winner-digitalart-2025',
-      title: 'Peaceful damage',
-      category: 'photography',
-      subCategory: 'landscape-photography',
-      artist: { 
-        id: 'rockers',
-        name: 'Rockers', 
-        email: '',
-        college: 'Lenscape 2024',
-        branch: '',
-        year: '',
-        avatar: null,
-        bio: '',
-        joinedDate: new Date('2024-10-25')
-      },
-      votes: 36,
-      imageUrl: 'https://res.cloudinary.com/dsjhcv06g/image/upload/v1781086584/lenscape/winners2025/digitalart-winner.jpg',
-      thumbnailUrl: null,
-      videoUrl: null,
-      description: 'Photography Domain | 36 votes',
-      status: 'approved' as const,
-      comments: [],
-      createdAt: new Date('2024-10-25'),
-    },
-    {
-      id: 'winner-digitalart-grunge-spidey-2025',
-      title: 'Grunge Spidey',
-      category: 'digital-art',
-      subCategory: 'character-design',
-      artist: { 
-        id: 'pranjal-verma',
-        name: 'PRANJAL VERMA', 
-        email: '',
-        college: 'Lenscape 2024',
-        branch: '',
-        year: '',
-        avatar: null,
-        bio: '',
-        joinedDate: new Date('2024-10-20')
-      },
-      votes: 18,
-      imageUrl: 'https://res.cloudinary.com/dsjhcv06g/image/upload/v1781087868/lenscape/winners2025/digitalart-grunge-spidey.jpg',
-      thumbnailUrl: null,
-      videoUrl: null,
-      description: 'Digital Art Domain | Spider-Man artwork with grunge aesthetic',
-      status: 'approved' as const,
-      comments: [],
-      createdAt: new Date('2024-10-20'),
-    },
-    {
-  id: 'winner-photo-pranjal-waadiyan-2025',
-  title: 'Waadiyan',
-  category: 'photography',
-  subCategory: 'landscape-photography',
-  artist: {
-    id: 'pranjal',
-    name: 'Pranjal',
-    email: '',
-    college: 'Lenscape 2024',
-    branch: '',
-    year: '',
-    avatar: null,
-    bio: 'A photographer passionate about capturing the grandeur of nature and the serenity of mountain landscapes.',
-    joinedDate: new Date('2024-10-20')
-  },
-  votes: 26,
-  imageUrl: 'https://res.cloudinary.com/dsjhcv06g/image/upload/v1781708427/Waadiyan.jpg',
-  thumbnailUrl: null,
-  videoUrl: null,
-  description: 'A breathtaking panoramic view of a Himalayan valley where towering snow-capped peaks surround a winding river below. The dramatic clouds and rugged terrain create a powerful sense of scale, tranquility, and the raw beauty of the mountains.',
-  status: 'approved' as const,
-  comments: [],
-  createdAt: new Date('2024-10-20'),
-}
   ]
   
 
@@ -423,13 +427,13 @@ export default function LandingPage() {
                   >
                     <div className="flex flex-col items-center justify-center p-8 md:p-14 rounded-[2rem] backdrop-blur-md bg-black/30 border border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.6)]">
                       <span className="font-mono text-xs md:text-sm text-exhibition-gold uppercase tracking-[0.4em] mb-4">
-                        Glimpse of 2024
+                        Lenscape 2026
                       </span>
                       <h1 className="editorial-text text-6xl md:text-8xl text-exhibition-bone max-w-2xl font-bold" style={{ textShadow: '0 4px 30px rgba(0,0,0,0.8)' }}>
                         Hall of Fame
                       </h1>
                       <p className="font-sans text-sm md:text-lg text-zinc-200 mt-6 max-w-lg tracking-wide leading-relaxed" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
-                        Walk through the glimpse of 2024. Click on any frame to inspect the artwork.
+                        Walk the corridor of this year's exhibition. Click on any frame to inspect the artwork.
                       </p>
                     </div>
                     <motion.div
@@ -843,7 +847,7 @@ export default function LandingPage() {
                 {/* Bottom Bar: Action buttons */}
                 <div className="flex items-center justify-between mt-0.5 pt-2 border-t border-zinc-900">
                   <span className="font-mono text-[9.5px] text-zinc-500">
-                    {selectedArtwork.id === 'starry-night-popular' ? 'Featured Masterpiece' : 'Hall of Fame · 2024'}
+                    {selectedArtwork.id === 'starry-night-popular' ? 'Featured Masterpiece' : 'Lenscape 2026 · Featured'}
                   </span>
                   
                   <div className="flex items-center gap-4">

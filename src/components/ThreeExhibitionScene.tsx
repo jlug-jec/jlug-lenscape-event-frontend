@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, Suspense, useMemo, useCallback } from 'react'
-import { Canvas, useFrame, useThree, useLoader } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Text, Sparkles } from '@react-three/drei'
 import * as THREE from 'three'
 import { TextureLoader } from 'three'
@@ -96,23 +96,73 @@ interface PaintingProps {
 
 // Texture cache so each URL loads only once
 const textureCache = new Map<string, THREE.Texture>()
-
-const PaintingInner: React.FC<{ url: string; hovered: boolean }> = ({ url, hovered }) => {
-  const texture = useLoader(TextureLoader, url)
-  // Cache it for reuse
-  if (!textureCache.has(url)) textureCache.set(url, texture)
-  return (
-    <mesh position={[0, 0, 0.06]} geometry={PAINTING_GEO}>
-      <meshBasicMaterial map={texture} toneMapped={false} opacity={hovered ? 1 : 0.93} transparent />
-    </mesh>
-  )
-}
+// URLs known to be unreachable (deleted asset, disabled CDN account, offline).
+// Remembered so a broken frame is never re-requested on each render.
+const failedTextures = new Set<string>()
 
 const FallbackPlane: React.FC = () => (
   <mesh position={[0, 0, 0.06]} geometry={PAINTING_GEO}>
     <meshBasicMaterial color="#1a1a1a" />
   </mesh>
 )
+
+/**
+ * Loads a painting texture without ever throwing.
+ *
+ * `useLoader` suspends and then *throws* when a request fails. That throw
+ * escapes Suspense, trips react-three-fiber's error boundary, and takes the
+ * whole <Canvas> down with it ("THREE.WebGLRenderer: Context Lost"). One dead
+ * image URL should cost one empty frame, not the entire corridor — so failures
+ * are caught here and reported as `null`.
+ */
+function useSafeTexture(url: string): THREE.Texture | null {
+  const [texture, setTexture] = useState<THREE.Texture | null>(() => textureCache.get(url) ?? null)
+
+  useEffect(() => {
+    if (!url || failedTextures.has(url)) {
+      setTexture(null)
+      return
+    }
+
+    const cached = textureCache.get(url)
+    if (cached) {
+      setTexture(cached)
+      return
+    }
+
+    let active = true
+    new TextureLoader().load(
+      url,
+      tex => {
+        if (!active) { tex.dispose(); return }
+        textureCache.set(url, tex)
+        setTexture(tex)
+      },
+      undefined,
+      () => {
+        failedTextures.add(url)
+        if (active) setTexture(null)
+      },
+    )
+
+    return () => { active = false }
+  }, [url])
+
+  return texture
+}
+
+const PaintingInner: React.FC<{ url: string; hovered: boolean }> = ({ url, hovered }) => {
+  const texture = useSafeTexture(url)
+
+  // Still loading, or the asset is gone — show the blank canvas in its frame.
+  if (!texture) return <FallbackPlane />
+
+  return (
+    <mesh position={[0, 0, 0.06]} geometry={PAINTING_GEO}>
+      <meshBasicMaterial map={texture} toneMapped={false} opacity={hovered ? 1 : 0.93} transparent />
+    </mesh>
+  )
+}
 
 const Painting: React.FC<PaintingProps> = ({ artwork, position, rotation, onSelect, isMobile }) => {
   const [hovered, setHovered] = useState(false)
@@ -140,10 +190,8 @@ const Painting: React.FC<PaintingProps> = ({ artwork, position, rotation, onSele
       {/* Frame */}
       <mesh geometry={FRAME_GEO} material={hovered ? GOLD_HOVERED_MAT : GOLD_MAT} />
 
-      {/* Image */}
-      <Suspense fallback={<FallbackPlane />}>
-        <PaintingInner url={imageUrl} hovered={hovered} />
-      </Suspense>
+      {/* Image — never suspends or throws; shows FallbackPlane until ready */}
+      <PaintingInner url={imageUrl} hovered={hovered} />
 
       {/* Single combined point light — was 2 per painting before */}
       <pointLight
