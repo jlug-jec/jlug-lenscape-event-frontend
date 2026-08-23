@@ -3,7 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Text, Sparkles } from '@react-three/drei'
 import * as THREE from 'three'
 import { TextureLoader } from 'three'
-import { Artwork } from '../types'
+import { Artwork, ratioOf } from '../types'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const MAX_Z = 8
@@ -16,11 +16,71 @@ const WIRE_MAT = new THREE.MeshBasicMaterial({ color: '#111111' })
 const SHADOW_MAT = new THREE.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: 0.25 })
 
 // Shared geometries — created once, reused everywhere
-const FRAME_GEO = new THREE.BoxGeometry(3.2, 2.4, 0.08)
-const PAINTING_GEO = new THREE.PlaneGeometry(2.8, 2.0)
-const SHADOW_GEO = new THREE.PlaneGeometry(3.4, 2.6)
-const WIRE_GEO = new THREE.BoxGeometry(1.23, 0.008, 0.008)
 const PEG_GEO = new THREE.CylinderGeometry(0.03, 0.03, 0.06, 6) // 6-sided instead of 8
+
+// ─── Per-artwork frame sizing ────────────────────────────────────────────────
+// Every work keeps the aspect ratio its artist chose on the submission form.
+// The canvas is fitted *inside* this box rather than cropped to it, so a
+// portrait hangs tall and narrow and a widescreen hangs short and wide.
+const MAX_ART_W = 2.8
+const MAX_ART_H = 2.2
+const FRAME_BORDER = 0.2   // gold edge around the canvas
+const SHADOW_MARGIN = 0.1  // wall shadow bleed beyond the frame
+
+export interface FrameDims {
+  artW: number
+  artH: number
+  frameW: number
+  frameH: number
+  /** Half-width the hanging wires attach at. */
+  wireX: number
+  /** Length of each hanging wire. */
+  wireLen: number
+  /** Wire tilt from vertical. */
+  wireAngle: number
+  /** Height of the wall peg above the group origin. */
+  pegY: number
+}
+
+/** Fits the artwork's ratio inside the max box without cropping. */
+export function frameDimsFor(orientation?: string | null): FrameDims {
+  const ratio = ratioOf(orientation)
+  let artW = MAX_ART_W
+  let artH = MAX_ART_W / ratio
+  if (artH > MAX_ART_H) {
+    artH = MAX_ART_H
+    artW = MAX_ART_H * ratio
+  }
+
+  const frameW = artW + FRAME_BORDER * 2
+  const frameH = artH + FRAME_BORDER * 2
+  const pegY = frameH / 2 + 0.25
+  // Wires meet the frame near its top corners and run up to the single peg.
+  const wireX = frameW * 0.38
+  const rise = pegY - frameH / 2
+  const wireLen = Math.hypot(rise, wireX)
+
+  // Tilt of a wire measured from horizontal: the left wire leans one way, the
+  // right one mirrors it, so both point back at the peg.
+  return { artW, artH, frameW, frameH, wireX, wireLen, wireAngle: Math.atan2(rise, wireX), pegY }
+}
+
+// Geometry caches — one set per distinct frame size, not one per painting.
+const frameGeoCache = new Map<string, THREE.BoxGeometry>()
+const artGeoCache = new Map<string, THREE.PlaneGeometry>()
+const shadowGeoCache = new Map<string, THREE.PlaneGeometry>()
+const wireGeoCache = new Map<string, THREE.BoxGeometry>()
+
+const key = (a: number, b: number) => `${a.toFixed(3)}x${b.toFixed(3)}`
+
+function cachedGeo<T>(store: Map<string, T>, k: string, make: () => T): T {
+  let geo = store.get(k)
+  if (!geo) {
+    geo = make()
+    store.set(k, geo)
+  }
+  return geo
+}
 
 // ─── Static Starry Night Artwork ─────────────────────────────────────────────
 const starryNightArtwork: Artwork = {
@@ -43,6 +103,7 @@ const starryNightArtwork: Artwork = {
   imageUrl: '/starry-night.jpg',
   thumbnailUrl: '/starry-night.jpg',
   videoUrl: null,
+  orientation: 'landscape',
   description: 'The Starry Night is an oil-on-canvas painting by the Dutch Post-Impressionist painter Vincent van Gogh. Painted in June 1889, it depicts the view from the east-facing window of his asylum room at Saint-Rémy-de-Provence, just before sunrise, with the addition of an imaginary village.',
   status: 'approved',
   comments: [],
@@ -100,11 +161,14 @@ const textureCache = new Map<string, THREE.Texture>()
 // Remembered so a broken frame is never re-requested on each render.
 const failedTextures = new Set<string>()
 
-const FallbackPlane: React.FC = () => (
-  <mesh position={[0, 0, 0.06]} geometry={PAINTING_GEO}>
+const FallbackPlane: React.FC<{ dims: FrameDims }> = ({ dims }) => (
+  <mesh position={[0, 0, 0.06]} geometry={artGeoFor(dims)}>
     <meshBasicMaterial color="#1a1a1a" />
   </mesh>
 )
+
+const artGeoFor = (d: FrameDims) =>
+  cachedGeo(artGeoCache, key(d.artW, d.artH), () => new THREE.PlaneGeometry(d.artW, d.artH))
 
 /**
  * Loads a painting texture without ever throwing.
@@ -151,14 +215,14 @@ function useSafeTexture(url: string): THREE.Texture | null {
   return texture
 }
 
-const PaintingInner: React.FC<{ url: string; hovered: boolean }> = ({ url, hovered }) => {
+const PaintingInner: React.FC<{ url: string; hovered: boolean; dims: FrameDims }> = ({ url, hovered, dims }) => {
   const texture = useSafeTexture(url)
 
   // Still loading, or the asset is gone — show the blank canvas in its frame.
-  if (!texture) return <FallbackPlane />
+  if (!texture) return <FallbackPlane dims={dims} />
 
   return (
-    <mesh position={[0, 0, 0.06]} geometry={PAINTING_GEO}>
+    <mesh position={[0, 0, 0.06]} geometry={artGeoFor(dims)}>
       <meshBasicMaterial map={texture} toneMapped={false} opacity={hovered ? 1 : 0.93} transparent />
     </mesh>
   )
@@ -175,23 +239,37 @@ const Painting: React.FC<PaintingProps> = ({ artwork, position, rotation, onSele
   const onOut  = useCallback(() => { setHovered(false); document.body.style.cursor = 'auto'    }, [])
   const onClick = useCallback(() => onSelect(artwork), [onSelect, artwork])
 
+  // Frame is built around the artwork's submitted ratio, never the other way round.
+  const dims = useMemo(() => frameDimsFor(artwork.orientation), [artwork.orientation])
+
+  const frameGeo = cachedGeo(frameGeoCache, key(dims.frameW, dims.frameH),
+    () => new THREE.BoxGeometry(dims.frameW, dims.frameH, 0.08))
+  const shadowGeo = cachedGeo(shadowGeoCache, key(dims.frameW, dims.frameH),
+    () => new THREE.PlaneGeometry(dims.frameW + SHADOW_MARGIN * 2, dims.frameH + SHADOW_MARGIN * 2))
+  const wireGeo = cachedGeo(wireGeoCache, key(dims.wireLen, 0),
+    () => new THREE.BoxGeometry(dims.wireLen, 0.008, 0.008))
+
+  // Each wire is centred midway between the peg and the frame corner it holds.
+  const wireY = (dims.pegY + dims.frameH / 2) / 2
+  const wireCx = dims.wireX / 2
+
   return (
     <group position={position} rotation={rotation} onClick={onClick} onPointerOver={onOver} onPointerOut={onOut}>
       {/* Peg */}
-      <mesh position={[0, 1.45, -0.04]} rotation={[Math.PI / 2, 0, 0]} geometry={PEG_GEO} material={GOLD_MAT} />
+      <mesh position={[0, dims.pegY, -0.04]} rotation={[Math.PI / 2, 0, 0]} geometry={PEG_GEO} material={GOLD_MAT} />
 
       {/* Wires */}
-      <mesh position={[-0.6, 1.325, -0.038]} rotation={[0, 0, -Math.atan2(0.25, 1.2)]} geometry={WIRE_GEO} material={WIRE_MAT} />
-      <mesh position={[ 0.6, 1.325, -0.038]} rotation={[0, 0,  Math.atan2(0.25, 1.2)]} geometry={WIRE_GEO} material={WIRE_MAT} />
+      <mesh position={[-wireCx, wireY, -0.038]} rotation={[0, 0,  dims.wireAngle]} geometry={wireGeo} material={WIRE_MAT} />
+      <mesh position={[ wireCx, wireY, -0.038]} rotation={[0, 0, -dims.wireAngle]} geometry={wireGeo} material={WIRE_MAT} />
 
       {/* Wall shadow */}
-      <mesh position={[0, 0, -0.039]} geometry={SHADOW_GEO} material={SHADOW_MAT} />
+      <mesh position={[0, 0, -0.039]} geometry={shadowGeo} material={SHADOW_MAT} />
 
       {/* Frame */}
-      <mesh geometry={FRAME_GEO} material={hovered ? GOLD_HOVERED_MAT : GOLD_MAT} />
+      <mesh geometry={frameGeo} material={hovered ? GOLD_HOVERED_MAT : GOLD_MAT} />
 
       {/* Image — never suspends or throws; shows FallbackPlane until ready */}
-      <PaintingInner url={imageUrl} hovered={hovered} />
+      <PaintingInner url={imageUrl} hovered={hovered} dims={dims} />
 
       {/* Single combined point light — was 2 per painting before */}
       <pointLight
@@ -536,13 +614,19 @@ const ThreeExhibitionScene: React.FC<ThreeExhibitionSceneProps> = ({
     const stepZ    = (MAX_Z - MIN_Z - 16) / Math.max(approvedArtworks.length, 1)
     const list: { pos: [number, number, number]; rot: [number, number, number]; artwork: Artwork }[] = []
 
+    // Walk down the corridor, giving each work at least enough room for its own
+    // frame width — a widescreen piece takes more wall than a portrait does.
+    let z = MAX_Z - 10
     approvedArtworks.forEach((artwork, i) => {
       const isLeft = i % 2 === 0
+      const { frameW } = frameDimsFor(artwork.orientation)
       list.push({
-        pos: [isLeft ? -paintX : paintX, 1.0, MAX_Z - 10 - i * stepZ],
+        pos: [isLeft ? -paintX : paintX, 1.0, z],
         rot: [0, isLeft ? Math.PI / 2 : -Math.PI / 2, 0],
         artwork,
       })
+      // Frames alternate walls, so the same-wall gap is twice this advance.
+      z -= Math.max(stepZ, frameW * 0.9 + 0.6)
     })
 
     list.push({ pos: [0, 1.0, MIN_Z - 1.96], rot: [0, 0, 0], artwork: starryNightArtwork })

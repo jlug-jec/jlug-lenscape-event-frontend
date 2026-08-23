@@ -149,6 +149,7 @@ export default function LandingPage() {
       imageUrl: 'https://res.cloudinary.com/dpnbjyxsc/image/upload/v1787499993/lenscape/gallery/kdlxonabsrq8auzngeeg.jpg',
       thumbnailUrl: null,
       videoUrl: null,
+      orientation: 'portrait' as const,
       description: 'Walking on water',
       status: 'approved' as const,
       comments: [],
@@ -174,6 +175,7 @@ export default function LandingPage() {
       imageUrl: 'https://res.cloudinary.com/dpnbjyxsc/image/upload/v1787500162/lenscape/gallery/ndaly53vfba9z3qoq9wg.jpg',
       thumbnailUrl: null,
       videoUrl: null,
+      orientation: 'portrait' as const,
       description: 'Behind the Mask',
       status: 'approved' as const,
       comments: [],
@@ -199,6 +201,7 @@ export default function LandingPage() {
       imageUrl: 'https://res.cloudinary.com/dpnbjyxsc/image/upload/v1787500017/lenscape/gallery/wzf6yugcng74qthxtrgw.jpg',
       thumbnailUrl: null,
       videoUrl: null,
+      orientation: 'landscape' as const,
       description: 'The camera arrived late. The story didn\'t. By the time I met his eyes, time had already left its signature. I only borrowed a single frame from a life that kept moving after I walked away.',
       status: 'approved' as const,
       comments: [],
@@ -224,6 +227,7 @@ export default function LandingPage() {
       imageUrl: 'https://res.cloudinary.com/dpnbjyxsc/image/upload/v1787500007/lenscape/gallery/fvjtobulzvmp9k4l3k5u.jpg',
       thumbnailUrl: null,
       videoUrl: null,
+      orientation: 'square' as const,
       description: 'A beginning of new phase this summer, the trees begin to bloom and produce sweet fruits. Captures the beautiful phase of life.',
       status: 'approved' as const,
       comments: [],
@@ -251,6 +255,7 @@ export default function LandingPage() {
       imageUrl: 'https://res.cloudinary.com/dpnbjyxsc/image/upload/f_auto,q_auto/v1787500387/lenscape/gallery/u6x3knxgk0a0fwnnq1ks.heic',
       thumbnailUrl: null,
       videoUrl: null,
+      orientation: 'vertical' as const,
       description: 'Summer morning',
       status: 'approved' as const,
       comments: [],
@@ -734,7 +739,7 @@ export default function LandingPage() {
                     </p>
                   </div>
                   <button
-                    onClick={() => navigate('/submit')}
+                    onClick={() => navigate('/results')}
                     className="px-6 py-3 bg-exhibition-gold text-exhibition-void font-mono font-bold text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors self-start md:self-auto"
                   >
                     Add Your Canvas
@@ -769,7 +774,7 @@ export default function LandingPage() {
               <div className="flex flex-wrap justify-center gap-5 sm:gap-8 font-mono text-[9px] tracking-widest uppercase text-zinc-400">
                 <button onClick={scrollToResults} className="uppercase tracking-widest hover:text-exhibition-gold transition-colors">Results</button>
                 <Link to="/gallery" className="hover:text-exhibition-gold transition-colors">Exhibition</Link>
-                <Link to="/submit" className="hover:text-exhibition-gold transition-colors">Submit</Link>
+                <Link to="/results" className="hover:text-exhibition-gold transition-colors">Results Page</Link>
                 <Link to="/profile" className="hover:text-exhibition-gold transition-colors">Profile</Link>
               </div>
             </footer>

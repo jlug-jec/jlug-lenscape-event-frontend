@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LogOut, Compass, Image, Award, Lock, Upload } from 'lucide-react'
+import { LogOut, Compass, Image, Award, Lock, Trophy } from 'lucide-react'
 import { getToken, clearSession } from '../lib/session'
 
 interface ExhibitionNavProps {
@@ -44,7 +44,7 @@ const ExhibitionNav: React.FC<ExhibitionNavProps> = ({ isVisible = true }) => {
   const menuItems = [
     { name: 'Exhibition Hall', path: '/', icon: Compass },
     { name: 'Exhibition Rooms', path: '/gallery', icon: Image },
-    { name: 'Submit Work', path: '/submit', icon: Upload },
+    { name: 'Results', path: '/results', icon: Trophy },
     isLoggedIn && profileComplete
       ? { name: 'My Portfolio', path: '/profile', icon: Award }
       : { name: 'Enter Exhibition', path: '/auth/signup', icon: Lock },

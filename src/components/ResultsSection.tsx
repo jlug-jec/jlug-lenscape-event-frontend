@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Trophy, Play, X } from 'lucide-react'
 import { useResults, ResultArtwork, ResultCategory } from '../hooks/useResults'
+import { ratioOf } from '../types'
 
 /**
  * Announced results for Lenscape 2026.
@@ -77,32 +78,25 @@ const FALLBACK_RESULTS: ResultCategory[] = [
 
 /* ── Media thumbnail ─────────────────────────────────────────────────────── */
 
-/** Frame shape follows the stored orientation so portraits aren't cropped to a letterbox. */
-const ASPECT: Record<string, string> = {
-  portrait: 'aspect-[3/4]',
-  vertical: 'aspect-[3/4]',
-  square: 'aspect-square',
-  landscape: 'aspect-[4/3]',
-}
-
 const WinnerMedia: React.FC<{
   artwork: ResultArtwork
   accent: string
   numeral: string
-  isLead: boolean
-}> = ({ artwork, accent, numeral, isLead }) => {
+}> = ({ artwork, accent, numeral }) => {
   const src = artwork.thumbnailUrl || artwork.imageUrl
   const isVideo = Boolean(artwork.videoUrl)
-  const aspect = ASPECT[artwork.orientation || ''] || 'aspect-[4/3]'
-  // On the lead card's md split the frame fills the row height instead of
-  // holding its own ratio, so image and text columns stay flush.
-  const frame = `${aspect} ${isLead ? 'md:aspect-auto md:h-full md:min-h-[22rem]' : ''}`
+  // The frame takes the exact ratio the artist chose at submission, so the work
+  // fills it edge to edge with nothing cropped away.
+  const ratio = ratioOf(artwork.orientation)
 
   // A video entry with no poster still gets a framed placeholder rather than
   // collapsing the card's media column.
   if (!src) {
     return (
-      <div className={`w-full ${frame} flex items-center justify-center bg-black/60`}>
+      <div
+        className="w-full flex items-center justify-center bg-black/60"
+        style={{ aspectRatio: String(ratio) }}
+      >
         <span className="editorial-text text-5xl font-light opacity-20" style={{ color: accent }}>
           {numeral}
         </span>
@@ -111,12 +105,15 @@ const WinnerMedia: React.FC<{
   }
 
   return (
-    <div className={`relative w-full ${frame} overflow-hidden bg-black`}>
+    <div
+      className="relative w-full overflow-hidden bg-black"
+      style={{ aspectRatio: String(ratio) }}
+    >
       <img
         src={src}
         alt={artwork.title}
         loading="lazy"
-        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+        className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-[1.03]"
       />
       {/* Museum wash so the image sits in the room rather than on top of it */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
@@ -163,7 +160,7 @@ const WinnerCard: React.FC<{
       {/* Media — full width on mobile, left half of the lead card from md */}
       {hasMedia && (
         <div className={`flex-shrink-0 ${isLead ? 'md:w-[52%]' : ''}`}>
-          <WinnerMedia artwork={artwork} accent={meta.accent} numeral={meta.numeral} isLead={isLead} />
+          <WinnerMedia artwork={artwork} accent={meta.accent} numeral={meta.numeral} />
         </div>
       )}
 

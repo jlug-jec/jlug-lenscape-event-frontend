@@ -8,7 +8,7 @@ import ProfileSetupPage from './pages/ProfileSetupPage'
 import AdminPage from './pages/AdminPage'
 import AdminLoginPage from './pages/AdminLoginPage'
 import AdminSignupPage from './pages/AdminSignupPage'
-import SubmitPage from './pages/SubmitPage'
+import ResultsPage from './pages/ResultsPage'
 import SmoothScroll from './components/SmoothScroll'
 import RouteAnalytics from './components/RouteAnalytics'
 import { AppProvider } from './context/AppContext'
@@ -29,7 +29,9 @@ function App() {
             <Route path="/auth/signup" element={<AuthSignupPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/setup" element={<ProfileSetupPage />} />
-            <Route path="/submit" element={<SubmitPage />} />
+            <Route path="/results" element={<ResultsPage />} />
+            {/* Submissions closed for good — keep old links alive */}
+            <Route path="/submit" element={<Navigate to="/results" replace />} />
             {/* Admin — no link from nav, direct URL only */}
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/login" element={<AdminLoginPage />} />
