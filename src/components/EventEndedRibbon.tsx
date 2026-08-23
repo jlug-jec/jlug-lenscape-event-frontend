@@ -18,7 +18,7 @@ const EventEndedRibbon: React.FC = () => {
         </span>
         <span className="w-1 h-1 rounded-full bg-exhibition-void/50 flex-shrink-0" />
         <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.15em] opacity-80">
-          Results Coming Soon
+          Winners Announced
         </span>
       </div>
 
@@ -31,7 +31,7 @@ const EventEndedRibbon: React.FC = () => {
             Event Ended
           </span>
           <span className="block font-mono text-[9px] font-semibold uppercase tracking-[0.15em] mt-0.5 opacity-80">
-            Results Coming Soon
+            Winners Announced
           </span>
         </div>
       </div>

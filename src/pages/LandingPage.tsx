@@ -9,6 +9,7 @@ import CinematicIntro from '../components/CinematicIntro'
 import ExhibitionNav from '../components/ExhibitionNav'
 import ThreeExhibitionScene from '../components/ThreeExhibitionScene'
 import EventEndedRibbon from '../components/EventEndedRibbon'
+import ResultsSection from '../components/ResultsSection'
 import { useEventSettings } from '../hooks/useEventSettings'
 import ArtworkFrame from '../components/ArtworkFrame'
 import { useSpotlightAll } from '../hooks/useSpotlight'
@@ -109,6 +110,12 @@ export default function LandingPage() {
     handleScroll()
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Lenis drives page scroll, but scrollIntoView still lands correctly since
+  // Lenis syncs off the native scroll event — safer than a raw hash anchor.
+  const scrollToResults = () => {
+    document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   const handleIntroComplete = () => {
     sessionStorage.setItem('lenscape_intro_complete', 'true')
@@ -437,8 +444,11 @@ export default function LandingPage() {
           </div>
 
           {/* Main scrollable section overlays */}
-          <div className="relative z-10 bg-exhibition-void/90 backdrop-blur-md border-t border-exhibition-gold/15 py-32 px-6 md:px-12">
-            
+          <div className="relative z-10 bg-exhibition-void/90 backdrop-blur-md border-t border-exhibition-gold/15 py-20 sm:py-28 md:py-32 px-4 sm:px-6 md:px-12">
+
+            {/* Section: Results — Lenscape 2026 winners */}
+            <ResultsSection />
+
             {/* Section: Event Info */}
             <section className="max-w-4xl mx-auto mb-40">
               <div className="border border-exhibition-gold/20 bg-black/40 p-10 md:p-12">
@@ -596,17 +606,25 @@ export default function LandingPage() {
                     The Gallery Has Closed Its Doors
                   </h2>
                   <p className="text-sm md:text-base text-zinc-400 font-mono max-w-xl mx-auto leading-relaxed mb-4">
-                    Every submission now rests in the corridor, awaiting judgment. The curators have retired to deliberate — winners will be unveiled soon.
+                    Every submission now rests in the corridor. The curators have deliberated, the votes are counted — and the winners have been named.
                   </p>
                   <p className="text-xs md:text-sm text-exhibition-gold/80 font-mono italic max-w-xl mx-auto leading-relaxed mb-10">
                     To every artist who lent their vision to these walls — thank you for making this exhibition unforgettable.
                   </p>
-                  <button
-                    onClick={() => navigate('/gallery')}
-                    className="px-10 py-4 bg-exhibition-gold text-exhibition-void font-mono font-bold text-xs md:text-sm uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
-                  >
-                    View Exhibition
-                  </button>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
+                    <button
+                      onClick={scrollToResults}
+                      className="px-8 md:px-10 py-4 bg-exhibition-gold text-exhibition-void font-mono font-bold text-xs md:text-sm uppercase tracking-widest hover:bg-white hover:text-black transition-colors text-center"
+                    >
+                      See The Winners
+                    </button>
+                    <button
+                      onClick={() => navigate('/gallery')}
+                      className="px-8 md:px-10 py-4 border border-exhibition-gold/40 text-exhibition-gold font-mono font-bold text-xs md:text-sm uppercase tracking-widest hover:border-exhibition-gold hover:bg-exhibition-gold/10 transition-colors"
+                    >
+                      View Exhibition
+                    </button>
+                  </div>
                 </div>
               </section>
             )}
@@ -744,7 +762,8 @@ export default function LandingPage() {
                   LENSCAPE © 2026 // ORGANIZED BY JLUG CLUB
                 </span>
               </div>
-              <div className="flex gap-8 font-mono text-[9px] tracking-widest uppercase text-zinc-400">
+              <div className="flex flex-wrap justify-center gap-5 sm:gap-8 font-mono text-[9px] tracking-widest uppercase text-zinc-400">
+                <button onClick={scrollToResults} className="uppercase tracking-widest hover:text-exhibition-gold transition-colors">Results</button>
                 <Link to="/gallery" className="hover:text-exhibition-gold transition-colors">Exhibition</Link>
                 <Link to="/submit" className="hover:text-exhibition-gold transition-colors">Submit</Link>
                 <Link to="/profile" className="hover:text-exhibition-gold transition-colors">Profile</Link>

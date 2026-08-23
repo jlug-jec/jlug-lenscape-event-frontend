@@ -9,9 +9,10 @@ export interface EventSettings {
 
 // Safe defaults while the real settings are loading — event treated as
 // wrapped up (no submissions) until we hear otherwise from the backend.
+// Voting is permanently closed, so it never starts out open.
 const DEFAULT_SETTINGS: EventSettings = {
   submissionsEnabled: false,
-  votingEnabled: true,
+  votingEnabled: false,
 }
 
 /**

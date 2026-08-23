@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ShieldCheck, Users, UploadCloud, CheckCircle, Ban, TrendingUp, LogOut, Eye, Download, Heart, Settings } from 'lucide-react'
+import { ShieldCheck, Users, UploadCloud, CheckCircle, Ban, TrendingUp, LogOut, Eye, Download, Heart, Lock, Settings } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import * as XLSX from 'xlsx'
 
@@ -26,10 +26,12 @@ export default function AdminPage() {
   const [rejectReason, setRejectReason] = useState('')
   const [previewArtwork, setPreviewArtwork] = useState<any | null>(null)
 
-  // ── Event Controls (submissions / voting toggles) ────────────────────────────
-  const [eventSettings, setEventSettings] = useState({ submissionsEnabled: false, votingEnabled: true })
+  // ── Event Controls ───────────────────────────────────────────────────────────
+  // Voting is permanently closed and no longer admin-controlled, so only the
+  // submissions switch remains.
+  const [eventSettings, setEventSettings] = useState({ submissionsEnabled: false })
   const [settingsLoading, setSettingsLoading] = useState(true)
-  const [settingsSaving, setSettingsSaving] = useState<'submissions' | 'voting' | null>(null)
+  const [settingsSaving, setSettingsSaving] = useState<'submissions' | null>(null)
 
   // ── Verify admin token on mount ──────────────────────────────────────────────
   useEffect(() => {
@@ -68,10 +70,7 @@ export default function AdminPage() {
       const res = await fetch(`${API}/api/admin/settings`, { headers: authHeaders() })
       if (res.ok) {
         const data = await res.json()
-        setEventSettings({
-          submissionsEnabled: Boolean(data.submissionsEnabled),
-          votingEnabled: Boolean(data.votingEnabled),
-        })
+        setEventSettings({ submissionsEnabled: Boolean(data.submissionsEnabled) })
       }
     } catch {}
     setSettingsLoading(false)
@@ -86,19 +85,6 @@ export default function AdminPage() {
         body: JSON.stringify({ submissionsEnabled: next }),
       })
       if (res.ok) setEventSettings(prev => ({ ...prev, submissionsEnabled: next }))
-    } catch {}
-    setSettingsSaving(null)
-  }
-
-  const toggleVoting = async () => {
-    const next = !eventSettings.votingEnabled
-    setSettingsSaving('voting')
-    try {
-      const res = await fetch(`${API}/api/admin/settings`, {
-        method: 'POST', headers: authHeaders(),
-        body: JSON.stringify({ votingEnabled: next }),
-      })
-      if (res.ok) setEventSettings(prev => ({ ...prev, votingEnabled: next }))
     } catch {}
     setSettingsSaving(null)
   }
@@ -384,36 +370,22 @@ export default function AdminPage() {
               </button>
             </div>
 
-            {/* Voting toggle */}
-            <div className="flex items-center justify-between border border-zinc-800 px-4 py-3">
+            {/* Voting — permanently closed, no longer a control */}
+            <div className="flex items-center justify-between border border-zinc-800 px-4 py-3 opacity-70">
               <div className="flex items-center gap-3">
-                <Heart size={16} className={eventSettings.votingEnabled ? 'text-emerald-400' : 'text-zinc-500'} />
+                <Heart size={16} className="text-zinc-600" />
                 <div>
                   <span className="font-mono text-xs text-exhibition-bone block">Voting</span>
-                  <span className={`font-mono text-[9px] uppercase tracking-widest ${eventSettings.votingEnabled ? 'text-emerald-400' : 'text-zinc-500'}`}>
-                    {settingsLoading ? 'Loading…' : eventSettings.votingEnabled ? 'Open' : 'Closed'}
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-zinc-500">
+                    Closed permanently
                   </span>
                 </div>
               </div>
-              <button
-                onClick={toggleVoting}
-                disabled={settingsLoading || settingsSaving === 'voting'}
-                aria-pressed={eventSettings.votingEnabled}
-                aria-label="Toggle voting open or closed"
-                className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 disabled:opacity-50 ${
-                  eventSettings.votingEnabled ? 'bg-emerald-500/70' : 'bg-zinc-700'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                    eventSettings.votingEnabled ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
+              <Lock size={14} className="text-zinc-600 flex-shrink-0" />
             </div>
           </div>
           <p className="font-mono text-[9px] text-zinc-600 mt-4 leading-relaxed">
-            Closing voting shows "event has ended" messaging on the exhibition and gallery pages. Closing submissions blocks new artwork uploads.
+            Closing submissions blocks new artwork uploads. Voting ended with the event and can no longer be reopened — the results are published on the exhibition page.
           </p>
         </div>
 
