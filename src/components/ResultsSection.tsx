@@ -94,10 +94,10 @@ const WinnerMedia: React.FC<{
   if (!src) {
     return (
       <div
-        className="w-full flex items-center justify-center bg-black/60"
+        className="w-full flex items-center justify-center bg-black/60 max-h-[58vh] md:max-h-[70vh]"
         style={{ aspectRatio: String(ratio) }}
       >
-        <span className="editorial-text text-5xl font-light opacity-20" style={{ color: accent }}>
+        <span className="editorial-text text-4xl sm:text-5xl font-light opacity-20" style={{ color: accent }}>
           {numeral}
         </span>
       </div>
@@ -105,8 +105,10 @@ const WinnerMedia: React.FC<{
   }
 
   return (
+    // The height cap stops a 9:16 phone shot from eating a whole screen. When it
+    // bites, object-contain letterboxes against the black card — still no crop.
     <div
-      className="relative w-full overflow-hidden bg-black"
+      className="relative w-full overflow-hidden bg-black max-h-[58vh] md:max-h-[70vh]"
       style={{ aspectRatio: String(ratio) }}
     >
       <img
@@ -233,7 +235,7 @@ const WinnerCard: React.FC<{
 
           {hasMedia && (
             <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-zinc-500 mt-5 inline-block group-hover:text-exhibition-gold transition-colors">
-              {artwork.videoUrl ? 'Tap to watch' : 'Tap to view'}
+              {artwork.videoUrl ? 'Watch the film' : 'View full artwork'}
             </span>
           )}
         </div>
@@ -274,12 +276,12 @@ const ResultLightbox: React.FC<{ artwork: ResultArtwork; onClose: () => void }> 
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-2 right-2 sm:top-3 sm:right-3 z-20 w-9 h-9 flex items-center justify-center border border-exhibition-gold/25 bg-black/70 text-exhibition-gold hover:bg-exhibition-gold hover:text-exhibition-void transition-colors"
+          className="absolute top-2 right-2 sm:top-3 sm:right-3 z-20 w-11 h-11 sm:w-10 sm:h-10 flex items-center justify-center border border-exhibition-gold/25 bg-black/80 backdrop-blur-sm text-exhibition-gold active:bg-exhibition-gold active:text-exhibition-void hover:bg-exhibition-gold hover:text-exhibition-void transition-colors"
         >
           <X size={16} />
         </button>
 
-        <div className="bg-black flex items-center justify-center max-h-[60vh] sm:max-h-[70vh] overflow-hidden">
+        <div className="bg-black flex items-center justify-center max-h-[55vh] sm:max-h-[70vh] overflow-hidden">
           {artwork.videoUrl ? (
             <video
               src={artwork.videoUrl}
@@ -287,13 +289,13 @@ const ResultLightbox: React.FC<{ artwork: ResultArtwork; onClose: () => void }> 
               controls
               autoPlay
               playsInline
-              className="w-full max-h-[60vh] sm:max-h-[70vh]"
+              className="w-full max-h-[55vh] sm:max-h-[70vh] object-contain"
             />
           ) : (
             <img
               src={artwork.imageUrl || artwork.thumbnailUrl || ''}
               alt={artwork.title}
-              className="w-full max-h-[60vh] sm:max-h-[70vh] object-contain"
+              className="w-full max-h-[55vh] sm:max-h-[70vh] object-contain"
             />
           )}
         </div>

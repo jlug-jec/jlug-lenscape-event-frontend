@@ -43,7 +43,7 @@ export default function ResultsPage() {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="relative z-10 text-center mt-8 sm:mt-10"
         >
-          <span className="font-mono text-[9px] sm:text-[10px] text-exhibition-gold uppercase tracking-[0.35em] block mb-4">
+          <span className="font-mono text-[9px] sm:text-[10px] text-exhibition-gold uppercase tracking-[0.2em] sm:tracking-[0.35em] block mb-4">
             Lenscape 2026 · Summer at Your Place
           </span>
           <h1 className="editorial-text text-4xl sm:text-6xl md:text-7xl font-light text-exhibition-bone px-2 leading-tight">
@@ -76,7 +76,7 @@ export default function ResultsPage() {
 
         <button
           onClick={() => navigate('/gallery')}
-          className="mt-10 inline-flex items-center gap-2 px-7 sm:px-9 py-3.5 bg-exhibition-gold text-exhibition-void font-mono font-bold text-[11px] sm:text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
+          className="mt-10 inline-flex items-center justify-center gap-2 w-full sm:w-auto px-7 sm:px-9 py-4 sm:py-3.5 bg-exhibition-gold text-exhibition-void font-mono font-bold text-[11px] sm:text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
         >
           Browse Every Entry
           <ArrowRight size={13} className="flex-shrink-0" />
@@ -84,7 +84,7 @@ export default function ResultsPage() {
       </section>
 
       {/* Footer */}
-      <footer className="max-w-6xl mx-auto border-t border-zinc-900 px-4 sm:px-6 py-10 flex flex-col sm:flex-row justify-between items-center gap-5 mb-24">
+      <footer className="max-w-6xl mx-auto border-t border-zinc-900 px-4 sm:px-6 py-10 flex flex-col sm:flex-row justify-between items-center gap-5 mb-32 sm:mb-24">
         <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-widest text-center">
           LENSCAPE © 2026 // ORGANIZED BY JLUG CLUB
         </span>

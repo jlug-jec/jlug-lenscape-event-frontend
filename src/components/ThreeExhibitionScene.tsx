@@ -22,8 +22,12 @@ const PEG_GEO = new THREE.CylinderGeometry(0.03, 0.03, 0.06, 6) // 6-sided inste
 // Every work keeps the aspect ratio its artist chose on the submission form.
 // The canvas is fitted *inside* this box rather than cropped to it, so a
 // portrait hangs tall and narrow and a widescreen hangs short and wide.
+// The corridor is narrower on phones, so the walls sit closer to the camera —
+// frames are scaled down to match or they overflow the viewport vertically.
 const MAX_ART_W = 2.8
 const MAX_ART_H = 2.2
+const MAX_ART_W_MOBILE = 2.4
+const MAX_ART_H_MOBILE = 1.9
 const FRAME_BORDER = 0.2   // gold edge around the canvas
 const SHADOW_MARGIN = 0.1  // wall shadow bleed beyond the frame
 
@@ -43,13 +47,16 @@ export interface FrameDims {
 }
 
 /** Fits the artwork's ratio inside the max box without cropping. */
-export function frameDimsFor(orientation?: string | null): FrameDims {
+export function frameDimsFor(orientation?: string | null, isMobile = false): FrameDims {
+  const maxW = isMobile ? MAX_ART_W_MOBILE : MAX_ART_W
+  const maxH = isMobile ? MAX_ART_H_MOBILE : MAX_ART_H
+
   const ratio = ratioOf(orientation)
-  let artW = MAX_ART_W
-  let artH = MAX_ART_W / ratio
-  if (artH > MAX_ART_H) {
-    artH = MAX_ART_H
-    artW = MAX_ART_H * ratio
+  let artW = maxW
+  let artH = maxW / ratio
+  if (artH > maxH) {
+    artH = maxH
+    artW = maxH * ratio
   }
 
   const frameW = artW + FRAME_BORDER * 2
@@ -240,7 +247,7 @@ const Painting: React.FC<PaintingProps> = ({ artwork, position, rotation, onSele
   const onClick = useCallback(() => onSelect(artwork), [onSelect, artwork])
 
   // Frame is built around the artwork's submitted ratio, never the other way round.
-  const dims = useMemo(() => frameDimsFor(artwork.orientation), [artwork.orientation])
+  const dims = useMemo(() => frameDimsFor(artwork.orientation, isMobile), [artwork.orientation, isMobile])
 
   const frameGeo = cachedGeo(frameGeoCache, key(dims.frameW, dims.frameH),
     () => new THREE.BoxGeometry(dims.frameW, dims.frameH, 0.08))
@@ -619,7 +626,7 @@ const ThreeExhibitionScene: React.FC<ThreeExhibitionSceneProps> = ({
     let z = MAX_Z - 10
     approvedArtworks.forEach((artwork, i) => {
       const isLeft = i % 2 === 0
-      const { frameW } = frameDimsFor(artwork.orientation)
+      const { frameW } = frameDimsFor(artwork.orientation, isMobile)
       list.push({
         pos: [isLeft ? -paintX : paintX, 1.0, z],
         rot: [0, isLeft ? Math.PI / 2 : -Math.PI / 2, 0],
